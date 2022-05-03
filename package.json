@@ -1,0 +1,53 @@
+{
+  "name": "koishi-twitter-app",
+  "version": "1.0.0",
+  "private": true,
+  "main": "index.js",
+  "license": "MIT",
+  "workspaces": [
+    "plugins/*"
+  ],
+  "scripts": {
+    "build": "koishi-scripts build",
+    "bump": "koishi-scripts bump",
+    "clean": "koishi-scripts clean",
+    "dep": "koishi-scripts dep",
+    "new": "koishi-scripts new",
+    "pub": "koishi-scripts pub",
+    "setup": "koishi-scripts setup",
+    "dev": "cross-env NODE_ENV=development koishi start -r esbuild-register -r yaml-register -r tsconfig-paths/register --watch",
+    "start": "koishi start"
+  },
+  "devDependencies": {
+    "@koishijs/client": "^3.2.8",
+    "@koishijs/scripts": "^1.3.1",
+    "cross-env": "^7.0.3",
+    "esbuild": "^0.14.38",
+    "esbuild-register": "^3.3.2",
+    "tsconfig-paths": "^3.14.1",
+    "typescript": "^4.6.3",
+    "yaml-register": "^0.1.0"
+  },
+  "dependencies": {
+    "@koishijs/cli": "^4.6.1",
+    "@koishijs/plugin-adapter-discord": "^2.0.8",
+    "@koishijs/plugin-adapter-onebot": "^4.2.0",
+    "@koishijs/plugin-adapter-telegram": "^2.2.3",
+    "@koishijs/plugin-console": "^3.2.8",
+    "@koishijs/plugin-dataview": "^1.2.4",
+    "@koishijs/plugin-logger": "^1.2.2",
+    "@koishijs/plugin-manager": "^1.7.3",
+    "@koishijs/plugin-sandbox": "^1.1.0",
+    "@koishijs/plugin-status": "^5.3.6",
+    "chrome-finder": "^1.0.7",
+    "emoji-regex": "^10.1.0",
+    "koishi": "^4.6.1",
+    "mongodb": "^4.5.0",
+    "nanoid": "^3.3.3",
+    "nanoid-dictionary": "^4.3.0",
+    "node-fetch": "^3.2.4",
+    "puppeteer-core": "^13.7.0",
+    "twemoji": "^14.0.2",
+    "twitter-api-v2": "^1.12.0"
+  }
+}
