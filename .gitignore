@@ -1,7 +1,9 @@
 lib
 dist
+logs
 accounts
 
+koishi.yml
 node_modules
 npm-debug.log
 yarn-debug.log
