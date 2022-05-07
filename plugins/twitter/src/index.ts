@@ -39,6 +39,8 @@ export const schema: Schema<TwitterConfig> = Schema.object({
 })
 
 export function apply(ctx: Context, config: TwitterConfig) {
+  // only select context with guildId
+  const groupContext = ctx.guild();
   // write your plugin here
   const logger = ctx.logger(name);
   const mongoDatabase = new MongoDatabase(config.databaseUrl, logger);
@@ -103,6 +105,8 @@ export function apply(ctx: Context, config: TwitterConfig) {
       }
     });
 
+    await twitterClient.stream.connect();
+
     logger.debug("plugin loaded");
   });
 
@@ -132,7 +136,7 @@ export function apply(ctx: Context, config: TwitterConfig) {
       return segment("image", { url: "base64://" + screenshotResult.screenshotBase64 });
     });
 
-  ctx.command("translate <indexOrUrl: string>", "translate a tweet with provided translation")
+  groupContext.command("translate <indexOrUrl: string>", "translate a tweet with provided translation")
     .alias("tr")
     .example("tr https://twitter.com/Twitter/status/1509206476874784769 or tr 123")
     .action(async (argv, indexOrUrl) => {
@@ -185,7 +189,7 @@ export function apply(ctx: Context, config: TwitterConfig) {
       return segment("image", { url: "base64://" + screenshotResult.screenshotBase64 });
     });
 
-  ctx.command("set <username: string> <...keys>", "set user config for current group")
+  groupContext.command("set <username: string> <...keys>", "set user config for current group")
     .option("off", "set switch state")
     .example("set * tweet retweet tag --off")
     .check(async (argv, username, ...keys) => {
@@ -197,6 +201,7 @@ export function apply(ctx: Context, config: TwitterConfig) {
       }
     })
     .action(async (argv, username, ...keys) => {
+      logger.debug(`seting ${keys.join()} for user ${username} and group ${argv.session.guildId}`);
       const userConfigList: IUserConfig[] = [];
 
       if (username == "*") {
@@ -247,7 +252,7 @@ export function apply(ctx: Context, config: TwitterConfig) {
       }
     });
 
-  ctx.command("user <username: string>")
+  groupContext.command("user <username: string>")
     .option("add", "-add")
     .option("delete", "-delete")
     .example(`user -add mkZH0740`)
