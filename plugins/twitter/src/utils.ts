@@ -121,15 +121,15 @@ function parseTweetToSegments(tweet: ITweet, userConfig: IUserConfig): string {
  * @returns parsed string of screenshot result
  */
 export async function parseScreenshotResultToSegments(screenshotResult: IScreenshotResult, userConfig: IUserConfig) {
-  const result: string[] = [];
+  let screenshot: string = "";
 
   if (userConfig.screenshot) {
-    result.push(segment("image", { url: `base64://${screenshotResult.screenshotBase64}` }));
+    screenshot = segment("image", { url: `base64://${screenshotResult.screenshotBase64}` });
   }
 
   if (screenshotResult.tweetList.length == 1) {
-    return parseTweetToSegments(screenshotResult.tweetList[0], userConfig);
+    return screenshot + parseTweetToSegments(screenshotResult.tweetList[0], userConfig);
   } else {
-    return screenshotResult.tweetList.map((tweet, index) => `[${index + 1}]: ${parseTweetToSegments(tweet, userConfig)}`).join("\n");
+    return screenshot + screenshotResult.tweetList.map((tweet, index) => `[${index + 1}]: ${parseTweetToSegments(tweet, userConfig)}`).join("\n");
   }
 }

@@ -60,18 +60,17 @@ export function apply(ctx: Context, config: TwitterConfig) {
 
   // register plugin ready callback
   ctx.on("ready", async () => {
-    logger.debug("plugin loading")
+    logger.debug(`plugin loading with config ${JSON.stringify(config)}`);
 
     await mongoDatabase.load();
     await puppeteerClient.load();
     await twitterClient.load();
 
-    logger.debug("plugin loaded");
+    const useridSet = await mongoDatabase.getRegisteredUserIdList();
+    const useridList = [...useridSet];
+    logger.debug(`plugin registering user id list ${JSON.stringify(useridList)}`);
 
-    const useridList = await mongoDatabase.getRegisteredUserIdList();
-    logger.debug(`plugin registering user id list ${useridList}`);
-
-    await twitterClient.updateStreamRule([...useridList]);
+    await twitterClient.updateStreamRule(useridList);
 
     twitterClient.stream.on(ETwitterStreamEvent.Data, async (tweet) => {
       logger.debug("received tweet");
@@ -101,14 +100,15 @@ export function apply(ctx: Context, config: TwitterConfig) {
         const userConfig = groupConfig.userConfigMap[tweet.data.author_id];
         if (userConfig[tweetType]) {
           const msg = await parseScreenshotResultToSegments(screenshotResult, userConfig);
-          await ctx.bots.get(config.botid).sendMessage(groupConfig.guildId, msg);
+          const hisoryIndex = await mongoDatabase.addHistory(groupConfig.guildId, `${username}/status/${tweet.data.id}`);
+          await ctx.bots.get(config.botid).sendMessage(groupConfig.guildId, msg + `index: ${hisoryIndex}`);
         }
       }
     });
 
     await twitterClient.stream.connect();
 
-    logger.debug("plugin loaded");
+    logger.debug(`plugin loaded`);
   });
 
   ctx.on("dispose", async () => {
@@ -155,7 +155,7 @@ export function apply(ctx: Context, config: TwitterConfig) {
 
         if (historyResult.status == false) return historyResult.content;
 
-        url = historyResult.content;
+        url = `https://twitter.com/${historyResult.content}`;
         const userName = url.substring(0, url.indexOf("/"));
 
         const userConfigResult = await mongoDatabase.getUserConfig(argv.session.guildId, undefined, userName);
@@ -199,6 +199,9 @@ export function apply(ctx: Context, config: TwitterConfig) {
       if (username == "*") {
         const groupConfig = await mongoDatabase.getGroupConfig(argv.session.guildId);
         userConfigList.push(...Object.values(groupConfig.userConfigMap));
+        if (userConfigList.length == 0) {
+          return "there is no user registered for current group";
+        }
       } else {
         const userConfigResult = await mongoDatabase.getUserConfig(argv.session.guildId, undefined, username);
         if (userConfigResult.status == false) return userConfigResult.content;

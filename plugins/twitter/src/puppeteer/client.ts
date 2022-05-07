@@ -66,7 +66,7 @@ export class PuppeteerClient {
    * Load the puppeteer client
    */
   async load() {
-    this.logger.debug(`puppteer client launch, options: ${this.options}, loginInfo: ${this.loginInfo}`);
+    this.logger.debug(`puppteer client launch, options: ${JSON.stringify(this.options)}, loginInfo: ${JSON.stringify(this.loginInfo)}`);
     this.client = await puppeteer.launch(this.options);
     this.logger.debug(`puppeteer client successfully launched`);
   }
@@ -183,7 +183,7 @@ export class PuppeteerClient {
 
     this.logger.debug(`type user name completed, next ...`);
 
-    const nextButton = (await page.$$("div[role=button]"))[2];
+    let nextButton = (await page.$$("div[role=button]"))[2];
     await nextButton.click();
 
     this.logger.debug(`next button clicked`);
@@ -196,7 +196,12 @@ export class PuppeteerClient {
     await passwordInput.type(this.loginInfo.password, { delay: getRandomDelay(100, 300) });
     await waitForTime(getRandomDelay(1000, 2000));
 
-    this.logger.debug(`type password completed, next ...`);
+    this.logger.debug(`type password completed`);
+
+    nextButton = (await page.$$("div[role=button]"))[2];
+    await nextButton.click();
+
+    this.logger.debug(`next button clicked`);
 
     // handle possible phone verification on new login location
     const verificationInput = await page.$("input");
@@ -209,7 +214,7 @@ export class PuppeteerClient {
 
       this.logger.debug(`type verification completed, next ...`);
 
-      const nextButton = (await page.$$("div[role=button]"))[1];
+      nextButton = (await page.$$("div[role=button]"))[1];
       await nextButton.click();
 
       this.logger.debug(`next button clicked`);
