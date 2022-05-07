@@ -1,6 +1,6 @@
 import { Logger } from "koishi";
 import { Collection, MongoClient } from "mongodb";
-import { err, ok } from "../model";
+import { err, ok, Result } from "../model";
 import { IGroupConfig, IUserConfig, MAX_HISTORY_LENGTH, UserConfigModifier } from "./model";
 import { makeGroupConfig, makeUserConfig } from "./utils";
 
@@ -65,7 +65,7 @@ export class MongoDatabase {
    * @param username username of the registered twitter user
    * @returns true result containing the user config, or false result containing the error message
    */
-  async getUserConfig(guildId: string, userid?: string, username?: string) {
+  async getUserConfig(guildId: string, userid?: string, username?: string): Promise<Result<false, string> | Result<true, IUserConfig>> {
     const groupConfig = await this.getGroupConfig(guildId);
     let userConfig: IUserConfig = undefined;
     if (userid && userid in groupConfig.userConfigMap) {

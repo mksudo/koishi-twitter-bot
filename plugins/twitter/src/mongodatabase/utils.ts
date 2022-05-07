@@ -1,3 +1,5 @@
+import { IGroupConfig, IUserConfig } from "./model"
+
 export function makeGroupConfig(guildId: string): IGroupConfig {
   return {
     guildId,

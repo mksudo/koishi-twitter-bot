@@ -1,13 +1,14 @@
 import fs from "fs";
 import { Context, Schema, segment } from 'koishi'
-import { ETwitterStreamEvent } from 'twitter-api-v2';
+import { ETwitterStreamEvent, UserV2Result } from 'twitter-api-v2';
 import { alphanumerical } from "nanoid-dictionary";
 import { customAlphabet } from "nanoid/async";
-import { CustomizableUserConfigKeys, IUserConfig, MongoDatabase, SwitchableUserConfigKeys, UserConfigModifier } from './mongodatabase';
+import { CustomizableUserConfigKeys, IGroupConfig, IUserConfig, MongoDatabase, SwitchableUserConfigKeys, UserConfigModifier } from './mongodatabase';
 import { makeUserConfig } from './mongodatabase/utils';
 import { PuppeteerClient } from './puppeteer';
 import { TwitterApiClient } from './twitter-api';
 import { parseScreenshotResultToSegments, saveToFile } from './utils';
+import { Result } from "./model";
 
 export const name = 'twitter';
 
@@ -189,6 +190,30 @@ export function apply(ctx: Context, config: TwitterConfig) {
       return segment("image", { url: "base64://" + screenshotResult.screenshotBase64 });
     });
 
+  groupContext.command("check <username: string>")
+    .example("check mkZH0740")
+    .action(async (argv, username) => {
+      const groupConfig = await mongoDatabase.getGroupConfig(argv.session.guildId);
+      const userConfigList: IUserConfig[] = [];
+
+      if (username == "*") {
+        const groupConfig = await mongoDatabase.getGroupConfig(argv.session.guildId);
+        userConfigList.push(...Object.values(groupConfig.userConfigMap));
+      } else {
+        const userConfigResult = await mongoDatabase.getUserConfig(argv.session.guildId, undefined, username);
+        if (userConfigResult.status == false) return userConfigResult.content;
+
+        userConfigList.push(userConfigResult.content);
+      }
+
+      const msgList: string[] = [];
+      for (const userConfig of userConfigList) {
+        msgList.push(JSON.stringify(userConfig));
+      }
+
+      return msgList.join("\n");
+    })
+
   groupContext.command("set <username: string> <...keys>", "set user config for current group")
     .option("off", "set switch state")
     .example("set * tweet retweet tag --off")
@@ -252,29 +277,38 @@ export function apply(ctx: Context, config: TwitterConfig) {
       }
     });
 
-  groupContext.command("user <username: string>")
+  groupContext.command("user [username: string]")
     .option("add", "-add")
     .option("delete", "-delete")
     .example(`user -add mkZH0740`)
     .action(async (argv, username) => {
-      const user = await twitterClient.client.userByUsername(username);
-      if (user.errors) return `error while finding user, ${user.errors}`;
-      if (argv.options.add) {
-        const result = await mongoDatabase.registerUserConfig(argv.session.guildId, user.data.id, user.data.username);
-        if (result.status == true) {
-          const userIdList = await mongoDatabase.getRegisteredUserIdList();
-          await twitterClient.updateStreamRule([...userIdList]);
+      if (username) {
+        const user: UserV2Result = await twitterClient.client.userByUsername(username);
+        if (user.errors) return `error while finding user, ${user.errors}`;
+        if (argv.options.add) {
+          const result = await mongoDatabase.registerUserConfig(argv.session.guildId, user.data.id, user.data.username);
+          if (result.status == true) {
+            const userIdList = await mongoDatabase.getRegisteredUserIdList();
+            await twitterClient.updateStreamRule([...userIdList]);
+          }
+          return result.content;
+        } else if (argv.options.delete) {
+          const result = await mongoDatabase.unregisterUserConfig(argv.session.guildId, user.data.id, user.data.username);
+          if (result.status == true) {
+            const userIdList = await mongoDatabase.getRegisteredUserIdList();
+            await twitterClient.updateStreamRule([...userIdList]);
+          }
+          return result.content;
+        } else {
+          const userConfig = await mongoDatabase.getUserConfig(argv.session.guildId, user.data.id);
+          if (userConfig.status == false) {
+            return userConfig.content;
+          }
+          return `config for ${username} is ${JSON.stringify(userConfig.content)}`;
         }
-        return result.content;
-      } else if (argv.options.delete) {
-        const result = await mongoDatabase.unregisterUserConfig(argv.session.guildId, user.data.id, user.data.username);
-        if (result.status == true) {
-          const userIdList = await mongoDatabase.getRegisteredUserIdList();
-          await twitterClient.updateStreamRule([...userIdList]);
-        }
-        return result.content;
       } else {
-        return "please supply one of the options: add or delete";
+        const groupConfig: IGroupConfig = await mongoDatabase.getGroupConfig(argv.session.guildId);
+        return `user registered: ${Object.keys(groupConfig.userConfigMap).join()}`;
       }
     })
 }

@@ -1,10 +1,11 @@
 import puppeteer, { Browser, Product, launch, Page, Viewport } from "puppeteer-core";
 import fs from "fs";
-import { err, IUserConfig, ok, Result } from "../model";
+import { err, ok, Result } from "../model";
 import { NOOP } from "../utils";
 import { IScreenshotPageResult, IScreenshotResult, ITweet, ITweetComponent, ITweetEntity, ITwitterLoginInfo } from "./model";
 import { MajorTranslationBlock, parseMajorTranslation } from "./utils";
 import { Logger } from "koishi";
+import { IUserConfig } from "../mongodatabase";
 
 
 /**

@@ -1,4 +1,4 @@
-export interface Result<Status extends boolean, Content> {
+export interface Result<Status extends true | false, Content> {
   status: Status,
   content: Content,
 }
