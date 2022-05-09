@@ -149,6 +149,10 @@ export class PuppeteerClient {
       };
     });
     await page.setViewport(maxViewPort);
+    // reset position
+    await page.evaluate(() => {
+      window.scrollTo(0, 0);
+    });
   }
 
   /**
@@ -171,7 +175,7 @@ export class PuppeteerClient {
     const loginButton = await page.$(`a[href="/login"]`);
     await loginButton.click();
 
-    await page.waitForSelector("input");
+    await page.waitForNetworkIdle();
 
     this.logger.debug("login page loaded, start login procedure");
 
@@ -465,16 +469,23 @@ export class PuppeteerClient {
             };
           }
 
-          const isComment = field.childElementCount == 2;
-          const componentField = isComment ? field.children[1].querySelector("div[lang]") : field.children[0].querySelector("div[lang]");
-
+          const isCommentTweet = field.childElementCount == 2;
+          let componentField: Element;
+          if (isCommentTweet) {
+            componentField = field.children[1].querySelector("div[lang]");
+          } else {
+            componentField = field.children[0].querySelector("div[lang]") || field.children[1].querySelector("div[lang]");
+          }
           currTweet.elements = parseComponentField(componentField);
 
           const extendedField = field.children[1].children.length === 0 ? field.children[2] : field.children[1];
-          const hasExtendedField = extendedField.querySelector(`a[href="${window.location.href.substring(19)}"]`) === null;
+          const hasExtendedField = extendedField.querySelector(`a[href="${window.location.href.substring(19)}"]`) === null && extendedField.innerHTML != "";
 
           if (hasExtendedField) {
-            currTweet.entities = parseExtendedField(extendedField);
+            currTweet.entities = [];
+            for (const child of extendedField.children[0]?.children) {
+              currTweet.entities.push(...parseExtendedField(child));
+            }
           }
 
           result.tweetList.push(currTweet);
@@ -482,7 +493,7 @@ export class PuppeteerClient {
           // stop iterating when the current tweet we have is the main tweet
           // or we cannot find the main tweet
           // ignore the case that the fist one is deleted
-          if (!isComment || index == articleList.length - 1) {
+          if (!isCommentTweet || index == articleList.length - 1) {
             result.options.clip.height = currBoundingRect.y - result.options.clip.y + currBoundingRect.height;
             break;
           }
@@ -503,7 +514,10 @@ export class PuppeteerClient {
     await page.bringToFront();
 
     this.logger.debug("start puppeteer screenshot");
-    const screenshotBase64 = (await page.screenshot(result.options).catch(() => "")) as string;
+    const screenshotBase64 = (await page.screenshot(result.options).catch((err) => {
+      this.logger.warn(err);
+      return "";
+    })) as string;
     this.occupied = false;
 
     this.logger.debug("close current page, screenshot procedure ends and frees all resources");
@@ -525,13 +539,13 @@ export class PuppeteerClient {
     const parsedTranslation = parseMajorTranslation(text);
     const loadCustomContentPromises: Promise<string>[] = [];
 
-    if (userConfig.css) loadCustomContentPromises.push(fs.promises.readFile(userConfig.css, "utf-8"));
-    if (userConfig.tag) loadCustomContentPromises.push(fs.promises.readFile(userConfig.tag, "base64"));
-    if (userConfig.background) loadCustomContentPromises.push(fs.promises.readFile(userConfig.background, "base64"));
+    loadCustomContentPromises.push(userConfig.css ? fs.promises.readFile(userConfig.css, "utf-8") : Promise.resolve(undefined));
+    loadCustomContentPromises.push(userConfig.tag ? fs.promises.readFile(userConfig.tag, "base64") : Promise.resolve(undefined));
+    loadCustomContentPromises.push(userConfig.background ? fs.promises.readFile(userConfig.background, "base64") : Promise.resolve(undefined));
 
     this.logger.debug("start loading user custom contents");
     // read all custom contents
-    const [userCSS, userBackground, userTag] = (await Promise.allSettled(loadCustomContentPromises))
+    const [userCSS, userTag, userBackground] = (await Promise.allSettled(loadCustomContentPromises))
       .map((settledResult) => settledResult.status == "fulfilled" ? settledResult.value : undefined);
     this.logger.debug("user custom contents are loaded, start adding translations");
 
@@ -618,16 +632,20 @@ export class PuppeteerClient {
         if (!(field)) continue;
 
         const isCommentTweet = field.childElementCount === 2;
-        const componentField = isCommentTweet ? field.children[1].querySelector("div[lang]") : field.children[0].querySelector("div[lang]");
-
+        let componentField: Element;
+        if (isCommentTweet) {
+          componentField = field.children[1].querySelector("div[lang]");
+        } else {
+          componentField = field.children[0].querySelector("div[lang]") || field.children[1].querySelector("div[lang]");
+        }
         const extendedField = field.children[1].children.length === 0 ? field.children[2] : field.children[1];
-        const hasExtendedField = extendedField.querySelector(`a[href="${window.location.href.substring(19)}"]`) === null;
+        const hasExtendedField = extendedField.querySelector(`a[href="${window.location.href.substring(19)}"]`) === null && extendedField.innerHTML != "";
 
         for (const minorBlock of translationBlock.content) {
           if (minorBlock.type == "main" && componentField) {
             const translationElement = addTranslationBlock(componentField, minorBlock.content);
             // only main tweet needs tag
-            if (!isCommentTweet) addTag(translationElement);
+            if (!isCommentTweet && customized.userTag) addTag(translationElement);
           } else if (minorBlock.type == "entity" && hasExtendedField) {
             const entityIndex = (typeof (minorBlock.index) == "string" ? parseInt(minorBlock.index.substring(0, minorBlock.index.indexOf("."))) : minorBlock.index) - 1;
 

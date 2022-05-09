@@ -125,7 +125,11 @@ export class MongoDatabase {
    */
   async modifyUserConfig(guildId: string, modifier: UserConfigModifier, userid?: string, username?: string) {
     if ((await this.getUserConfig(guildId, userid, username)).status == true) {
-      await this.groupConfigCollection.findOneAndUpdate({ guildId }, { $set: { [`userConfigMap.${userid}`]: modifier }});
+      const modifyMap = {};
+      for (const [key, value] of Object.entries(modifier)) {
+        modifyMap[`userConfigMap.${userid}.${key}`] = value;
+      }
+      await this.groupConfigCollection.findOneAndUpdate({ guildId }, { $set: modifyMap });
       return ok(`user config for user ${username || userid} is modified`);
     }
     return err(`user ${username || userid} is not registered`);

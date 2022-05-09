@@ -1,5 +1,6 @@
 import fs from "fs";
 import twemoji from "twemoji";
+import fetch from "node-fetch";
 import { segment } from "koishi";
 import { IScreenshotResult, ITweet, ITweetComponent } from "./puppeteer";
 import { IUserConfig } from "./mongodatabase";
@@ -28,7 +29,7 @@ export async function saveToFile(content: segment.Parsed, path: string) {
   if (content.type == "text") {
     await fs.promises.writeFile(path, content.data["content"]);
   } else if (content.type == "image") {
-    await downloadImage(content.data["content"], path);
+    await downloadImage(content.data["url"], path);
   } else {
     throw new Error("not implemented");
   }
@@ -104,6 +105,7 @@ function parseTweetToSegments(tweet: ITweet, userConfig: IUserConfig): string {
           result.push(currentBlock);
           break;
         case "tweet":
+          currentBlock = segment("text", { content: "[TWEET]\n" });
           currentBlock = parseTweetToSegments(element.tweet, userConfig);
           result.push(currentBlock);
           break;

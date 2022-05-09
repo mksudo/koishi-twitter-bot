@@ -1,7 +1,7 @@
 import fs from "fs";
 import { Context, Schema, segment } from 'koishi'
 import { ETwitterStreamEvent, UserV2Result } from 'twitter-api-v2';
-import { alphanumerical } from "nanoid-dictionary";
+import { alphanumeric } from "nanoid-dictionary";
 import { customAlphabet } from "nanoid/async";
 import { CustomizableUserConfigKeys, IGroupConfig, IUserConfig, MongoDatabase, SwitchableUserConfigKeys, UserConfigModifier } from './mongodatabase';
 import { makeUserConfig } from './mongodatabase/utils';
@@ -45,11 +45,13 @@ export function apply(ctx: Context, config: TwitterConfig) {
   // write your plugin here
   const logger = ctx.logger(name);
   const mongoDatabase = new MongoDatabase(config.databaseUrl, logger);
+  // only headless client will give proper screenshot result
+  // possibly because of scroll bar ?
   const puppeteerClient = new PuppeteerClient(
     {
       product: "chrome",
       executablePath: config.executablePath,
-      headless: false,
+      headless: true,
       args: ["--no-sandbox", "--disable-setuid-sandbox"],
     }, {
     username: config.twitterUserName,
@@ -101,7 +103,7 @@ export function apply(ctx: Context, config: TwitterConfig) {
         if (userConfig[tweetType]) {
           const msg = await parseScreenshotResultToSegments(screenshotResult, userConfig);
           const hisoryIndex = await mongoDatabase.addHistory(groupConfig.guildId, `${username}/status/${tweet.data.id}`);
-          await ctx.bots.get(config.botid).sendMessage(groupConfig.guildId, msg + `index: ${hisoryIndex}`);
+          await ctx.bots.get(config.botid).sendMessage(groupConfig.guildId, msg + `\n[INDEX]: ${hisoryIndex}`);
         }
       }
     });
@@ -156,7 +158,7 @@ export function apply(ctx: Context, config: TwitterConfig) {
         if (historyResult.status == false) return historyResult.content;
 
         url = `https://twitter.com/${historyResult.content}`;
-        const userName = url.substring(0, url.indexOf("/"));
+        const userName = historyResult.content.substring(0, historyResult.content.indexOf("/"));
 
         const userConfigResult = await mongoDatabase.getUserConfig(argv.session.guildId, undefined, userName);
 
@@ -176,7 +178,7 @@ export function apply(ctx: Context, config: TwitterConfig) {
 
       // get user translation input
       await argv.session.send("please input your translation");
-      translation = await argv.session.prompt();
+      translation = segment.unescape(await argv.session.prompt());
       logger.debug(`received user translation ${translation}`);
 
       // add translation and take screenshot
@@ -253,7 +255,8 @@ export function apply(ctx: Context, config: TwitterConfig) {
           if (result.length != 1) return `invalid amount of content supplied for setting ${key}`;
           const content = result[0];
 
-          const filename = await customAlphabet(alphanumerical, 10);
+          const filenameGenerator = customAlphabet(alphanumeric, 10);
+          const filename = await filenameGenerator();
           const suffix = key == "css" ? "txt" : "png";
           const dir = `./resources/${argv.session.guildId}`;
 
@@ -262,12 +265,13 @@ export function apply(ctx: Context, config: TwitterConfig) {
           const filepath = `${dir}/${filename}.${suffix}`;
           if (key == "css" && content.type != "text" || key != "css" && content.type != "image") return "invalid content supplied";
 
-          await saveToFile(content, filepath).catch((err) => {
+          await saveToFile(content, filepath).then(() => {
+            // modify if success
+            modifier[key] = filepath;
+          }, (err) => {
             logger.warn(`${err}`);
             return argv.session.sendQueued(`${err}`);
           });
-
-          modifier[key] = filepath;
         }
 
         const msgList: string[] = [];

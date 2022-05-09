@@ -39,6 +39,7 @@
     "@koishijs/plugin-manager": "^1.7.3",
     "@koishijs/plugin-sandbox": "^1.1.0",
     "@koishijs/plugin-status": "^5.3.6",
+    "@types/nanoid-dictionary": "^4.2.0",
     "chrome-finder": "^1.0.7",
     "emoji-regex": "^10.1.0",
     "koishi": "^4.6.1",

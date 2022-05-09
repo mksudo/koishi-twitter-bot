@@ -62,7 +62,7 @@ function splitText<T>(text: string, regex: RegExp, parser: (segment: string, ste
   for (const matchedSegment of text.matchAll(regex)) {
     // parse preceeding text component
     if (matchedSegment.index != startIndex) {
-      result.push(parser(text.substring(startIndex, matchedSegment.index), step, matchedSegment));
+      result.push(parser(text.substring(startIndex, matchedSegment.index), step, undefined));
     }
 
     step += 1;
