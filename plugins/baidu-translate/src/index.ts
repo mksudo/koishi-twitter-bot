@@ -3,6 +3,7 @@ import md5 from 'md5';
 import fetch from 'node-fetch';
 import { BaiduTranslateError, BaiduTranslateResponse } from './model';
 
+
 declare module "koishi" {
   namespace Context {
     interface Services {
@@ -48,7 +49,7 @@ class BaiduTranslateClient extends Service {
     // standard implmentation https://fanyi-api.baidu.com/doc/21
     const salt = Math.floor(Math.random() * (SALT_RANGE[1] - SALT_RANGE[0] + 1) + SALT_RANGE[0]);
     const signedText = md5(`${this.config.appid}${text}${salt}${this.config.secret}`);
-    const requestUrl = `${this.config.endpoint}?q=${encodeURIComponent(text)}&from=${from}to=${to}&appid=${this.config.appid}&salt=${salt}&sign=${signedText}`;
+    const requestUrl = `${this.config.endpoint}?q=${encodeURIComponent(text)}&from=${from}&to=${to}&appid=${this.config.appid}&salt=${salt}&sign=${signedText}`;
 
     const result = await fetch(requestUrl);
     const resultJSON = await result.json() as BaiduTranslateResponse | BaiduTranslateError;

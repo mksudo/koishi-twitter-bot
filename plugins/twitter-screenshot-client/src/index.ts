@@ -5,6 +5,7 @@ import { retryDecorator } from "ts-retry-promise";
 import { IUserConfig } from "koishi-plugin-mongo-database";
 import { IScreenshotResult, ITweet, ITweetComponent, ITweetEntity, IScreenshotPageResult } from './model';
 import { err, getRandomDelay, MajorTranslationBlock, ok, parseMajorTranslation, waitForTime } from './utils';
+
 export * from "./model";
 
 declare module "koishi" {
@@ -79,7 +80,7 @@ class TwitterScreenshotClient extends Service {
    */
   protected async gotoUrl(page: Page, url: string) {
     LOGGER.debug(`start goto ${url}`);
-    const retryGoto = retryDecorator(page.goto, { retries: 3, delay: 1000 });
+    const retryGoto = retryDecorator(page.goto.bind(page), { retries: 3, delay: 1000 });
 
     const result = await retryGoto(url, {
       waitUntil: "domcontentloaded",
@@ -141,6 +142,7 @@ class TwitterScreenshotClient extends Service {
 
     let nextButton = (await page.$$("div[role=button]"))[2];
     await nextButton.click();
+    await page.waitForNetworkIdle();
 
     LOGGER.debug("start typing user password");
 
@@ -152,6 +154,7 @@ class TwitterScreenshotClient extends Service {
 
     nextButton = (await page.$$("div[role=button]"))[2];
     await nextButton.click();
+    await page.waitForNetworkIdle();
 
     // handle possible phone verification on new login location
     const verificationInput = await page.$("input");
@@ -323,7 +326,7 @@ class TwitterScreenshotClient extends Service {
             const photoList = extendedField.querySelectorAll("div[data-testid=tweetPhoto]");
             const video = extendedField.querySelector("div[data-testid=videoPlayer]");
             const quotedTweet = extendedField.querySelector("div[role=link][tabindex]");
-            const card = extendedField.querySelector(`div[data-testid="card.wrapper"]`);
+            const card = extendedField.matches(`div[data-testid="card.wrapper"]`) && extendedField || extendedField.querySelector(`div[data-testid="card.wrapper"]`);
 
             for (const photo of photoList) {
               result.push({

@@ -139,6 +139,6 @@ export async function parseScreenshotResultToSegments(screenshotResult: IScreens
     return result + await parseTweetToSegments(screenshotResult.tweetList[0], userConfig, translator);
   } else {
     const textList = await Promise.all(screenshotResult.tweetList.map(async (tweet, index) => `[${index + 1}]: ${await parseTweetToSegments(tweet, userConfig, translator)}`))
-    return textList.join("\n");
+    return result + textList.join("\n");
   }
 }

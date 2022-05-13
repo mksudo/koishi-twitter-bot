@@ -93,6 +93,13 @@ export function apply(ctx: Context, config: Config) {
     LOGGER.debug("plugin end");
   });
 
+  ctx.on("guild-deleted", async (session) => {
+    await ctx.mongoDatabase.deleteGroupConfig(session.guildId);
+    const uidList = await ctx.mongoDatabase.getRegisteredUserIdList();
+    await ctx.twitterApiClient.updateStreamRule(uidList);
+    LOGGER.debug(`establishing stream with user ids ${JSON.stringify(uidList)}`);
+  });
+
   ctx.command("screenshot <url: string>", "take screenshot for a tweet")
     .alias("scr")
     .example("scr https://twitter.com/Twitter/status/1509206476874784769")
