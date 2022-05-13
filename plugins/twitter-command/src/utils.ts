@@ -2,8 +2,9 @@ import fs from "fs";
 import twemoji from "twemoji";
 import fetch from "node-fetch";
 import { segment } from "koishi";
-import { IScreenshotResult, ITweet, ITweetComponent } from "./puppeteer";
-import { IUserConfig } from "./mongodatabase";
+import { IScreenshotResult, ITweet, ITweetComponent } from "koishi-plugin-twitter-screenshot-client";
+import { IUserConfig } from "koishi-plugin-mongo-database";
+import BaiduTranslationClient from "koishi-plugin-baidu-translate";
 
 
 export const NOOP = () => { };
@@ -64,11 +65,16 @@ function parseTweetComponentList(components: ITweetComponent[]) {
  * @param userConfig current user config
  * @returns parsed string
  */
-function parseTweetToSegments(tweet: ITweet, userConfig: IUserConfig): string {
+async function parseTweetToSegments(tweet: ITweet, userConfig: IUserConfig, translator: BaiduTranslationClient): Promise<string> {
   const result: string[] = [];
 
   if (userConfig.text) {
-    result.push(parseTweetComponentList(tweet.elements));
+    const text = parseTweetComponentList(tweet.elements);
+    result.push(text);
+    if (userConfig.translation) {
+      const translateResult = await translator.translate(text);
+      result.push(segment("text", { content: "[TRANSLATION]\n" }) + translateResult.content);
+    }
   }
 
   if (userConfig.extended && tweet.entities) {
@@ -106,7 +112,7 @@ function parseTweetToSegments(tweet: ITweet, userConfig: IUserConfig): string {
           break;
         case "tweet":
           currentBlock = segment("text", { content: "[TWEET]\n" });
-          currentBlock = parseTweetToSegments(element.tweet, userConfig);
+          currentBlock = await parseTweetToSegments(element.tweet, userConfig, translator);
           result.push(currentBlock);
           break;
       }
@@ -122,16 +128,17 @@ function parseTweetToSegments(tweet: ITweet, userConfig: IUserConfig): string {
  * @param userConfig current user config
  * @returns parsed string of screenshot result
  */
-export async function parseScreenshotResultToSegments(screenshotResult: IScreenshotResult, userConfig: IUserConfig) {
-  let screenshot: string = "";
+export async function parseScreenshotResultToSegments(screenshotResult: IScreenshotResult, userConfig: IUserConfig, translator: BaiduTranslationClient) {
+  let result: string = "";
 
   if (userConfig.screenshot) {
-    screenshot = segment("image", { url: `base64://${screenshotResult.screenshotBase64}` });
+    result = segment("image", { url: `base64://${screenshotResult.screenshotBase64}` });
   }
 
   if (screenshotResult.tweetList.length == 1) {
-    return screenshot + parseTweetToSegments(screenshotResult.tweetList[0], userConfig);
+    return result + await parseTweetToSegments(screenshotResult.tweetList[0], userConfig, translator);
   } else {
-    return screenshot + screenshotResult.tweetList.map((tweet, index) => `[${index + 1}]: ${parseTweetToSegments(tweet, userConfig)}`).join("\n");
+    const textList = await Promise.all(screenshotResult.tweetList.map(async (tweet, index) => `[${index + 1}]: ${await parseTweetToSegments(tweet, userConfig, translator)}`))
+    return textList.join("\n");
   }
 }

@@ -1,6 +1,21 @@
 import { ScreenshotOptions } from "puppeteer-core";
 
 /**
+ * This interface represents a succeed result
+ */
+export interface Ok<T> {
+  state: true,
+  content: T,
+}
+/**
+ * This interface represents a failed result
+ */
+export interface Err<T> {
+  state: false,
+  content: T,
+}
+
+/**
  * Represents the text block on tweet page
  */
 export interface ITweetText {

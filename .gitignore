@@ -9,6 +9,7 @@ npm-debug.log
 yarn-debug.log
 yarn-error.log
 tsconfig.tsbuildinfo
+tsconfig.temp.json
 
 .env
 .eslintcache

@@ -1,50 +1,49 @@
+import { Context, Logger, Schema, Service } from 'koishi';
 import { TwitterApi, TwitterApiv2, TweetStream, TweetV2SingleStreamResult } from "twitter-api-v2";
 
+
+declare module "koishi" {
+  namespace Context {
+    interface Services {
+      twitterApiClient: TwitterApiClient,
+    }
+  }
+}
+
+export const name = 'twitterApiClient';
+
+const LOGGER = new Logger(name);
+
 /**
- * This is the class that handles the twitter v2 api, including the stream and the client
- *
+ * This class implements the interaction between twitter api and current bot
  */
-export class TwitterApiClient {
+class TwitterApiClient extends Service {
   client: TwitterApiv2;
   stream: TweetStream<TweetV2SingleStreamResult>;
 
-  constructor(protected bearerToken) {
-    this.client = (new TwitterApi(bearerToken)).v2;
+  constructor(ctx: Context, public config: TwitterApiClient.Config) {
+    super(ctx, name);
+    // only use v2 api
+    this.client = new TwitterApi(config.bearerToken).v2;
   }
 
-  /**
-   * Create a stream if not initialized
-   */
-  async createStream() {
-    if (this.stream) return;
-
-    this.stream = await this.client.searchStream({
+  protected async start() {
+    this.stream = this.stream || await this.client.searchStream({
       "tweet.fields": ["entities", "in_reply_to_user_id", "referenced_tweets"],
       "user.fields": ["id", "username"],
-      "expansions": ["author_id"]
+      "expansions": ["author_id"],
     });
+    LOGGER.debug("service start");
+  }
+
+  protected async stop() {
+    this.stream?.close();
+    LOGGER.debug("service stop");
   }
 
   /**
-   * Initalize everything when plugin is loaded
-   */
-  async load() {
-    if (!(this.stream)) await this.createStream();
-  }
-
-  /**
-   * Properly close everything when plugin is disposed
-   */
-  async unload() {
-    if (this.stream) {
-      this.stream.close();
-    }
-  }
-
-  /**
-   * Update current searchStream rule to start follow given users
-   * @param uidList list of uids of following twitter users
-   * @throws Error when too much user to be handled
+   * Update twitter rules to follow all given twitter user
+   * @param uidList array of twitter user id
    */
   async updateStreamRule(uidList: string[]) {
     const ruleList = [];
@@ -85,3 +84,15 @@ export class TwitterApiClient {
     await this.client.updateStreamRules({ add: ruleList });
   }
 }
+
+namespace TwitterApiClient {
+  export interface Config {
+    bearerToken: string,
+  }
+
+  export const schema: Schema<Config> = Schema.object({
+    bearerToken: Schema.string().required().description("bearer token for twitter api v2"),
+  });
+}
+
+export default TwitterApiClient;

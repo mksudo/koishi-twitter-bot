@@ -1,3 +1,37 @@
+import { Err, Ok } from "./model";
+
+export function ok<T>(content: T): Ok<T> {
+  return {
+    state: true,
+    content,
+  }
+}
+
+export function err<T>(content: T): Err<T> {
+  return {
+    state: false,
+    content,
+  }
+}
+
+/**
+ * Get a randomized delay in miliseconds within the given interval
+ * @param min minimum delay in milisecond
+ * @param max maximum delay in milisecond
+ * @returns randomized delay time between minimum and maximum
+ */
+export function getRandomDelay(min: number, max: number) {
+  return Math.floor(Math.random() * (max - min + 1) + min);
+}
+
+/**
+ * Wait for a given amount of time
+ * @param miliseconds time to wait for in milisecond
+ */
+export async function waitForTime(miliseconds: number) {
+  await new Promise(resolve => setTimeout(resolve, miliseconds));
+}
+
 import twemoji from "twemoji";
 import emojiRegex from "emoji-regex";
 import { ITweetComponent } from "./model";
