@@ -35,6 +35,7 @@ export function apply(ctx: Context, config: Config) {
 
     await ctx.twitterApiClient.updateFollowers(uidList);
 
+    ctx.twitterApiClient.stream.on(ETwitterStreamEvent.Connected, () => LOGGER.info("Stream connected"));
     ctx.twitterApiClient.stream.on(ETwitterStreamEvent.ConnectError, (error) => LOGGER.warn(`Connect error ${JSON.stringify(error)}`));
     ctx.twitterApiClient.stream.on(ETwitterStreamEvent.ConnectionError, (error) => LOGGER.warn(`Connection error ${JSON.stringify(error)}`));
     ctx.twitterApiClient.stream.on(ETwitterStreamEvent.ConnectionLost, (error) => LOGGER.warn(`Connection lost ${JSON.stringify(error)}`));
