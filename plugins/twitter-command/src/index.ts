@@ -35,6 +35,14 @@ export function apply(ctx: Context, config: Config) {
 
     await ctx.twitterApiClient.updateFollowers(uidList);
 
+    ctx.twitterApiClient.stream.on(ETwitterStreamEvent.ConnectError, (error) => LOGGER.warn(`Connect error ${JSON.stringify(error)}`));
+    ctx.twitterApiClient.stream.on(ETwitterStreamEvent.ConnectionError, (error) => LOGGER.warn(`Connection error ${JSON.stringify(error)}`));
+    ctx.twitterApiClient.stream.on(ETwitterStreamEvent.ConnectionLost, (error) => LOGGER.warn(`Connection lost ${JSON.stringify(error)}`));
+    ctx.twitterApiClient.stream.on(ETwitterStreamEvent.Error, (error) => LOGGER.warn(`Error ${JSON.stringify(error)}`));
+    ctx.twitterApiClient.stream.on(ETwitterStreamEvent.DataError, (error) => LOGGER.warn(`Data Error ${error}`));
+    ctx.twitterApiClient.stream.on(ETwitterStreamEvent.ReconnectError, (error) => LOGGER.warn(`Reconnect Error ${error}`));
+    ctx.twitterApiClient.stream.on(ETwitterStreamEvent.ReconnectAttempt, (retryTimes) => LOGGER.warn(`Reconnecting, retry time ${retryTimes}`));
+
     ctx.twitterApiClient.stream.on(ETwitterStreamEvent.Data, async (tweet) => {
       const bot = ctx.bots.get(config.botId);
       if (!bot) {
