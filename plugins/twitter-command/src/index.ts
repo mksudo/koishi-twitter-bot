@@ -4,7 +4,7 @@ import BaiduTranslateClient, { name as baiduTranslateName } from "koishi-plugin-
 import MongoDatabaseClient, { CustomizableUserConfigKeys, IGroupConfig, IUserConfig, makeUserConfig, name as mongoDatabaseName, SwitchableUserConfigKeys, UserConfigModifier } from "koishi-plugin-mongo-database";
 import TwitterApiClient, { name as twitterApiClientName } from "koishi-plugin-twitter-api-client";
 import TwitterScreenshotClient, { name as twitterScreenshotClientName } from "koishi-plugin-twitter-screenshot-client";
-import { ETwitterStreamEvent, UserV2Result } from 'twitter-api-v2';
+import { ETwitterStreamEvent, UserV1, UserV2Result } from 'twitter-api-v2';
 import { customAlphabet } from "nanoid/async";
 import { alphanumeric } from "nanoid-dictionary";
 import { parseScreenshotResultToSegments, saveToFile } from './utils';
@@ -37,19 +37,16 @@ export function apply(ctx: Context, config: Config) {
       }
 
       let tweetType: "tweet" | "retweet" | "comment" = "tweet";
-      if (tweet.data.in_reply_to_user_id) {
-        tweetType = "comment";
-      } else if (tweet.data.referenced_tweets && tweet.data.referenced_tweets[0].type == "retweeted") {
-        tweetType = "retweet";
-      }
+      if (tweet.retweeted_status) tweetType = "retweet";
+      else if (tweet.in_reply_to_status_id) tweetType = "comment";
 
-      const username = tweet.includes.users[0].username;
+      const username = tweet.user.screen_name;
       LOGGER.debug(`received ${tweetType} from ${username}`);
 
-      const url = `https://twitter.com/${username}/status/${tweet.data.id}`;
+      const url = `https://twitter.com/${username}/status/${tweet.id}`;
 
-      const groupConfigList = await ctx.mongoDatabase.getGroupConfigListByRegisteredUser(tweet.data.author_id);
-      const subscribedList = groupConfigList.filter(groupConfig => groupConfig.userConfigMap[tweet.data.author_id][tweetType]);
+      const groupConfigList = await ctx.mongoDatabase.getGroupConfigListByRegisteredUser(tweet.user.id_str);
+      const subscribedList = groupConfigList.filter(groupConfig => groupConfig.userConfigMap[tweet.user.id_str][tweetType]);
 
       if (subscribedList.length) {
         const gotoResult = await ctx.twitterScreenshotClient.goto(url);
@@ -69,9 +66,9 @@ export function apply(ctx: Context, config: Config) {
         }
 
         for (const groupConfig of subscribedList) {
-          const userConfig = groupConfig.userConfigMap[tweet.data.author_id];
+          const userConfig = groupConfig.userConfigMap[tweet.user.id_str];
           const msg = await parseScreenshotResultToSegments(screenshotResult.content, userConfig, ctx.baiduTranslate);
-          const historyIndex = await ctx.mongoDatabase.addHistory(groupConfig.guildId, `${username}/status/${tweet.data.id}`);
+          const historyIndex = await ctx.mongoDatabase.addHistory(groupConfig.guildId, `${username}/status/${tweet.id}`);
           await bot.sendMessage(groupConfig.guildId, msg + `\n[INDEX]: ${historyIndex}`).catch(() => LOGGER.warn("send message error"));
         }
       }
@@ -81,9 +78,7 @@ export function apply(ctx: Context, config: Config) {
     const uidList = await ctx.mongoDatabase.getRegisteredUserIdList();
     LOGGER.debug(`establishing stream with user ids ${JSON.stringify(uidList)}`);
 
-    await ctx.twitterApiClient.updateStreamRule(uidList);
-
-    await ctx.twitterApiClient.stream.connect();
+    await ctx.twitterApiClient.updateFollowers(uidList);
 
     LOGGER.debug("plugin start");
   });
@@ -96,7 +91,7 @@ export function apply(ctx: Context, config: Config) {
   ctx.on("guild-deleted", async (session) => {
     await ctx.mongoDatabase.deleteGroupConfig(session.guildId);
     const uidList = await ctx.mongoDatabase.getRegisteredUserIdList();
-    await ctx.twitterApiClient.updateStreamRule(uidList);
+    await ctx.twitterApiClient.updateFollowers(uidList);
     LOGGER.debug(`establishing stream with user ids ${JSON.stringify(uidList)}`);
   });
 
@@ -282,24 +277,24 @@ export function apply(ctx: Context, config: Config) {
     .example(`user --add mkZH0740`)
     .action(async (argv, username) => {
       if (username) {
-        const user: UserV2Result = await ctx.twitterApiClient.client.userByUsername(username);
-        if (user.errors) return `error while finding user, ${user.errors}`;
+        const user: UserV1 = await ctx.twitterApiClient.client.user({ screen_name: username });
+        if (!(user)) return `error while finding user`;
         if (argv.options.add) {
-          const result = await ctx.mongoDatabase.createUserConfig(argv.session.guildId, user.data.id, user.data.username);
+          const result = await ctx.mongoDatabase.createUserConfig(argv.session.guildId, user.id_str, user.screen_name);
           if (result.state == true) {
             const userIdList = await ctx.mongoDatabase.getRegisteredUserIdList();
-            await ctx.twitterApiClient.updateStreamRule([...userIdList]);
+            await ctx.twitterApiClient.updateFollowers([...userIdList]);
           }
           return result.content;
         } else if (argv.options.delete) {
-          const result = await ctx.mongoDatabase.deleteUserConfig(argv.session.guildId, user.data.id, user.data.username);
+          const result = await ctx.mongoDatabase.deleteUserConfig(argv.session.guildId, user.id_str, user.screen_name);
           if (result.state == true) {
             const userIdList = await ctx.mongoDatabase.getRegisteredUserIdList();
-            await ctx.twitterApiClient.updateStreamRule([...userIdList]);
+            await ctx.twitterApiClient.updateFollowers([...userIdList]);
           }
           return result.content;
         } else {
-          const userConfig = await ctx.mongoDatabase.getUserConfig(argv.session.guildId, user.data.id);
+          const userConfig = await ctx.mongoDatabase.getUserConfig(argv.session.guildId, user.id_str);
           if (userConfig.state == false) {
             return userConfig.content;
           }
