@@ -60,7 +60,6 @@ class TwitterApiClient extends Service {
     this.stream = await this.client.filterStream({
       follow: this.followers,
     });
-    await this.stream.connect();
   }
 }
 

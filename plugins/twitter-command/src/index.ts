@@ -79,6 +79,8 @@ export function apply(ctx: Context, config: Config) {
         }
       }
     });
+
+    await ctx.twitterApiClient.stream.connect();
     LOGGER.debug("plugin start");
   });
 
@@ -91,6 +93,7 @@ export function apply(ctx: Context, config: Config) {
     await ctx.mongoDatabase.deleteGroupConfig(session.guildId);
     const uidList = await ctx.mongoDatabase.getRegisteredUserIdList();
     await ctx.twitterApiClient.updateFollowers(uidList);
+    await ctx.twitterApiClient.stream.connect();
     LOGGER.debug(`establishing stream with user ids ${JSON.stringify(uidList)}`);
   });
 
@@ -283,6 +286,7 @@ export function apply(ctx: Context, config: Config) {
           if (result.state == true) {
             const userIdList = await ctx.mongoDatabase.getRegisteredUserIdList();
             await ctx.twitterApiClient.updateFollowers([...userIdList]);
+            await ctx.twitterApiClient.stream.connect();
           }
           return result.content;
         } else if (argv.options.delete) {
@@ -290,6 +294,7 @@ export function apply(ctx: Context, config: Config) {
           if (result.state == true) {
             const userIdList = await ctx.mongoDatabase.getRegisteredUserIdList();
             await ctx.twitterApiClient.updateFollowers([...userIdList]);
+            await ctx.twitterApiClient.stream.connect();
           }
           return result.content;
         } else {
