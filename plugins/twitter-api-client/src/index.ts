@@ -55,7 +55,7 @@ class TwitterApiClient extends Service {
   }
 
   async updateFollowers(useridList: string[]) {
-    this.stream.close();
+    this.stream?.close();
     this.followers = useridList;
     this.stream = await this.client.filterStream({
       follow: this.followers,
