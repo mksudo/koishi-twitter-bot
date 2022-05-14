@@ -29,6 +29,12 @@ export function apply(ctx: Context, config: Config) {
   const groupCtx = ctx.guild();
 
   ctx.on("ready", async () => {
+
+    const uidList = await ctx.mongoDatabase.getRegisteredUserIdList();
+    LOGGER.debug(`establishing stream with user ids ${JSON.stringify(uidList)}`);
+
+    await ctx.twitterApiClient.updateFollowers(uidList);
+
     ctx.twitterApiClient.stream.on(ETwitterStreamEvent.Data, async (tweet) => {
       const bot = ctx.bots.get(config.botId);
       if (!bot) {
@@ -73,13 +79,6 @@ export function apply(ctx: Context, config: Config) {
         }
       }
     });
-
-
-    const uidList = await ctx.mongoDatabase.getRegisteredUserIdList();
-    LOGGER.debug(`establishing stream with user ids ${JSON.stringify(uidList)}`);
-
-    await ctx.twitterApiClient.updateFollowers(uidList);
-
     LOGGER.debug("plugin start");
   });
 
