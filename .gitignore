@@ -1,7 +1,6 @@
 lib
 dist
 logs
-utils
 accounts
 
 koishi.yml
