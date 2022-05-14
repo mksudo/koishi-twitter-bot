@@ -31,7 +31,17 @@ export function apply(ctx: Context, config: Config) {
 
   ctx.on("ready", async () => {
     // disabled because of a bug in yaml-register
-    // ctx.i18n.define("zh", require("./locales/zh"));
+    ctx.i18n.define("zh", require("./locales/zh"));
+
+    ctx.twitterApiClient.stream.on(ETwitterStreamEvent.Error, (errorPayload) => {
+      LOGGER.warn(`${errorPayload.type}: ${errorPayload.error} \n\n ${errorPayload.message || ""}`);
+    });
+
+    ctx.twitterApiClient.stream.on(ETwitterStreamEvent.Connected, () => LOGGER.debug("stream connected"));
+    ctx.twitterApiClient.stream.on(ETwitterStreamEvent.ConnectionClosed, () => LOGGER.debug("stream connection closed"));
+    ctx.twitterApiClient.stream.on(ETwitterStreamEvent.ConnectionLost, () => LOGGER.debug("stream connection lost"));
+    ctx.twitterApiClient.stream.on(ETwitterStreamEvent.Reconnected, () => LOGGER.debug("stream reconnected"));
+    ctx.twitterApiClient.stream.on(ETwitterStreamEvent.ReconnectAttempt, (time) => LOGGER.debug(`stream reconnection, attempt ${time}`));
 
     ctx.twitterApiClient.stream.on(ETwitterStreamEvent.Data, async (tweet) => {
       const bot = ctx.bots.get(config.botId);
@@ -104,10 +114,8 @@ export function apply(ctx: Context, config: Config) {
     LOGGER.debug(`establishing stream with user ids ${JSON.stringify(uidList)}`);
   });
 
-  ctx.command("screenshot <url: string>", ZH_LOCALS.COMMAND_SCREENSHOT.description)
+  ctx.command("screenshot <url: string>")
     .alias("scr")
-    .usage(ZH_LOCALS.COMMAND_SCREENSHOT.usage)
-    .example(ZH_LOCALS.COMMAND_SCREENSHOT.examples)
     .action(async (argv, url) => {
       LOGGER.debug(`screenshot command for ${url} start`);
 
@@ -140,10 +148,8 @@ export function apply(ctx: Context, config: Config) {
       }
     });
 
-  groupCtx.command("translate <indexOrUrl: string>", ZH_LOCALS.COMMAND_TRANSLATE.description)
+  groupCtx.command("translate <indexOrUrl: string>")
     .alias("tr")
-    .usage(ZH_LOCALS.COMMAND_TRANSLATE.usage)
-    .example(ZH_LOCALS.COMMAND_TRANSLATE.examples)
     .action(async (argv, indexOrUrl) => {
       LOGGER.debug("translate start");
 
@@ -196,9 +202,7 @@ export function apply(ctx: Context, config: Config) {
       return segment("image", { url: "base64://" + screenshotResult.content.screenshotBase64 });
     });
 
-  groupCtx.command("check <username: string>", ZH_LOCALS.COMMAND_CHECK.description)
-    .usage(ZH_LOCALS.COMMAND_CHECK.usage)
-    .example(ZH_LOCALS.COMMAND_CHECK.examples)
+  groupCtx.command("check <username: string>")
     .action(async (argv, username) => {
       const userConfigList: IUserConfig[] = [];
 
@@ -220,9 +224,7 @@ export function apply(ctx: Context, config: Config) {
       return msgList.join("\n");
     });
 
-  groupCtx.command("set <username: string> <...keys>", ZH_LOCALS.COMMAND_SET.description)
-    .usage(ZH_LOCALS.COMMAND_SET.usage)
-    .example(ZH_LOCALS.COMMAND_SET.examples)
+  groupCtx.command("set <username: string> <...keys>")
     .option("off", ZH_LOCALS.COMMAND_SET.options.off)
     .check(async (argv, username, ...keys) => {
       for (const key of keys) {
@@ -285,9 +287,7 @@ export function apply(ctx: Context, config: Config) {
       }
     });
 
-  groupCtx.command("user [username: string]", ZH_LOCALS.COMMAND_USER.description)
-    .usage(ZH_LOCALS.COMMAND_USER.usage)
-    .example(ZH_LOCALS.COMMAND_USER.examples)
+  groupCtx.command("user [username: string]")
     .option("add", ZH_LOCALS.COMMAND_USER.options.add)
     .option("delete", ZH_LOCALS.COMMAND_USER.options.delete)
     .action(async (argv, username) => {
