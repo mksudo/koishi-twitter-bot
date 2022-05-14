@@ -25,7 +25,12 @@ class TwitterApiClient extends Service {
   constructor(ctx: Context, public config: TwitterApiClient.Config) {
     super(ctx, name);
     // only use v2 api
-    this.client = new TwitterApi(config.bearerToken).v1;
+    this.client = new TwitterApi({
+      appKey: config.consumerKey,
+      appSecret: config.consumerSecret,
+      accessToken: config.accessToken,
+      accessSecret: config.accessSecret,
+    }).v1;
     this.followers = [];
   }
 
