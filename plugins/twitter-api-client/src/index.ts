@@ -18,19 +18,19 @@ const LOGGER = new Logger(name);
  * This class implements the interaction between twitter api and current bot
  */
 class TwitterApiClient extends Service {
+  api: TwitterApi;
   client: TwitterApiv1;
   stream: TweetStream<TweetV1>;
   followers: string[];
 
   constructor(ctx: Context, public config: TwitterApiClient.Config) {
     super(ctx, name);
-    // only use v2 api
-    this.client = new TwitterApi({
-      appKey: config.consumerKey,
-      appSecret: config.consumerSecret,
-      accessToken: config.accessToken,
-      accessSecret: config.accessSecret,
-    }).v1;
+    this.api = new TwitterApi({
+      appKey: this.config.consumerKey,
+      appSecret: this.config.consumerSecret,
+      accessToken: this.config.accessToken,
+      accessSecret: this.config.accessSecret,
+    });
     this.followers = [];
   }
 
@@ -41,9 +41,10 @@ class TwitterApiClient extends Service {
     //   "expansions": ["author_id"],
     // });
 
-    this.stream = this.stream || await this.client.filterStream({
-      follow: this.followers,
-    });
+    // switch to v1
+
+    LOGGER.debug("service starting");
+    this.client = this.api.v1;
 
     LOGGER.debug("service start");
   }
