@@ -181,6 +181,7 @@ export function apply(ctx: Context, config: Config) {
       LOGGER.debug(`start taking screenshot ...`);
       const gotoResult = await ctx.twitterScreenshotClient.goto(url);
       if (gotoResult.state == false) return gotoResult.content;
+      await ctx.twitterScreenshotClient.translate(gotoResult.content, translation, userConfig);
       const screenshotResult = await ctx.twitterScreenshotClient.screenshot(gotoResult.content);
       if (screenshotResult.state == false) return screenshotResult.content;
 
@@ -189,7 +190,7 @@ export function apply(ctx: Context, config: Config) {
       return segment("image", { url: "base64://" + screenshotResult.content.screenshotBase64 });
     });
 
-  groupCtx.command("check <username: string>")
+  groupCtx.command("check <username: string>", "check current user config")
     .example("check mkZH0740")
     .action(async (argv, username) => {
       const userConfigList: IUserConfig[] = [];
@@ -276,7 +277,7 @@ export function apply(ctx: Context, config: Config) {
       }
     });
 
-  groupCtx.command("user [username: string]")
+  groupCtx.command("user [username: string]", "manage user subscription")
     .option("add", "--add add user")
     .option("delete", "--delete delete user")
     .example(`user --add mkZH0740`)
