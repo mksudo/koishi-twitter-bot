@@ -61,10 +61,18 @@ class TwitterApiClient extends Service {
 namespace TwitterApiClient {
   export interface Config {
     bearerToken: string,
+    accessToken: string,
+    accessSecret: string,
+    consumerKey: string,
+    consumerSecret: string,
   }
 
   export const schema: Schema<Config> = Schema.object({
     bearerToken: Schema.string().required().description("bearer token for twitter api v2"),
+    accessToken: Schema.string().required().description("accessToken for twitter api v1"),
+    accessSecret: Schema.string().required().description("accessSecret for twitter api v1"),
+    consumerKey: Schema.string().required().description("consumerKey for twitter api v1"),
+    consumerSecret: Schema.string().required().description("consumerSecret for twitter api v1"),
   });
 }
 
