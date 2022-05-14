@@ -8,12 +8,13 @@ import { ETwitterStreamEvent, UserV2Result } from 'twitter-api-v2';
 import { customAlphabet } from "nanoid/async";
 import { alphanumeric } from "nanoid-dictionary";
 import { parseScreenshotResultToSegments, saveToFile } from './utils';
+import * as ZH_LOCALS from "./zhLocals";
 
-export const name = 'twitter-command';
+export const name = 'twitterCommand';
 
 const LOGGER = new Logger(name);
 
-export const using = [baiduTranslateName, mongoDatabaseName, twitterApiClientName, twitterScreenshotClientName] as const;
+// export const using = [baiduTranslateName, mongoDatabaseName, twitterApiClientName, twitterScreenshotClientName] as const;
 
 export interface Config {
   botId: string,
@@ -29,6 +30,9 @@ export function apply(ctx: Context, config: Config) {
   const groupCtx = ctx.guild();
 
   ctx.on("ready", async () => {
+    // disabled because of a bug in yaml-register
+    // ctx.i18n.define("zh", require("./locales/zh"));
+
     ctx.twitterApiClient.stream.on(ETwitterStreamEvent.Data, async (tweet) => {
       const bot = ctx.bots.get(config.botId);
       if (!bot) {
@@ -100,9 +104,10 @@ export function apply(ctx: Context, config: Config) {
     LOGGER.debug(`establishing stream with user ids ${JSON.stringify(uidList)}`);
   });
 
-  ctx.command("screenshot <url: string>", "take screenshot for a tweet")
+  ctx.command("screenshot <url: string>", ZH_LOCALS.COMMAND_SCREENSHOT.description)
     .alias("scr")
-    .example("scr https://twitter.com/Twitter/status/1509206476874784769")
+    .usage(ZH_LOCALS.COMMAND_SCREENSHOT.usage)
+    .example(ZH_LOCALS.COMMAND_SCREENSHOT.examples)
     .action(async (argv, url) => {
       LOGGER.debug(`screenshot command for ${url} start`);
 
@@ -116,7 +121,7 @@ export function apply(ctx: Context, config: Config) {
       return msg;
     });
 
-  groupCtx.command("announce <content: text>", "send message to all registered groups", { hidden: true })
+  groupCtx.command("announce <content: text>", { hidden: true })
     .alias("ann")
     .action(async (argv, content) => {
       if (argv.session.userId == config.superUserId) {
@@ -135,9 +140,10 @@ export function apply(ctx: Context, config: Config) {
       }
     });
 
-  groupCtx.command("translate <indexOrUrl: string>", "translate a tweet with provided translation")
+  groupCtx.command("translate <indexOrUrl: string>", ZH_LOCALS.COMMAND_TRANSLATE.description)
     .alias("tr")
-    .example("tr https://twitter.com/Twitter/status/1509206476874784769 or tr 123")
+    .usage(ZH_LOCALS.COMMAND_TRANSLATE.usage)
+    .example(ZH_LOCALS.COMMAND_TRANSLATE.examples)
     .action(async (argv, indexOrUrl) => {
       LOGGER.debug("translate start");
 
@@ -190,8 +196,9 @@ export function apply(ctx: Context, config: Config) {
       return segment("image", { url: "base64://" + screenshotResult.content.screenshotBase64 });
     });
 
-  groupCtx.command("check <username: string>", "check current user config")
-    .example("check mkZH0740")
+  groupCtx.command("check <username: string>", ZH_LOCALS.COMMAND_CHECK.description)
+    .usage(ZH_LOCALS.COMMAND_CHECK.usage)
+    .example(ZH_LOCALS.COMMAND_CHECK.examples)
     .action(async (argv, username) => {
       const userConfigList: IUserConfig[] = [];
 
@@ -213,9 +220,10 @@ export function apply(ctx: Context, config: Config) {
       return msgList.join("\n");
     });
 
-  groupCtx.command("set <username: string> <...keys>", "set user config for current group")
-    .option("off", "set switch state")
-    .example("set * tweet retweet tag --off")
+  groupCtx.command("set <username: string> <...keys>", ZH_LOCALS.COMMAND_SET.description)
+    .usage(ZH_LOCALS.COMMAND_SET.usage)
+    .example(ZH_LOCALS.COMMAND_SET.examples)
+    .option("off", ZH_LOCALS.COMMAND_SET.options.off)
     .check(async (argv, username, ...keys) => {
       for (const key of keys) {
         if (!SwitchableUserConfigKeys.includes(key as (typeof SwitchableUserConfigKeys)[number]) &&
@@ -277,10 +285,11 @@ export function apply(ctx: Context, config: Config) {
       }
     });
 
-  groupCtx.command("user [username: string]", "manage user subscription")
-    .option("add", "--add add user")
-    .option("delete", "--delete delete user")
-    .example(`user --add mkZH0740`)
+  groupCtx.command("user [username: string]", ZH_LOCALS.COMMAND_USER.description)
+    .usage(ZH_LOCALS.COMMAND_USER.usage)
+    .example(ZH_LOCALS.COMMAND_USER.examples)
+    .option("add", ZH_LOCALS.COMMAND_USER.options.add)
+    .option("delete", ZH_LOCALS.COMMAND_USER.options.delete)
     .action(async (argv, username) => {
       if (username) {
         const user: UserV2Result = await ctx.twitterApiClient.client.userByUsername(username);
