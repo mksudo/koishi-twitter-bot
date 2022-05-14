@@ -14,7 +14,7 @@ export const name = 'twitterCommand';
 
 const LOGGER = new Logger(name);
 
-// export const using = [baiduTranslateName, mongoDatabaseName, twitterApiClientName, twitterScreenshotClientName] as const;
+export const using = [baiduTranslateName, mongoDatabaseName, twitterApiClientName, twitterScreenshotClientName] as const;
 
 export interface Config {
   botId: string,
