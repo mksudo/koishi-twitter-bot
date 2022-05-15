@@ -231,23 +231,18 @@ export function apply(ctx: Context, config: Config) {
       return segment("image", { url: "base64://" + screenshotResult.content.screenshotBase64 });
     });
 
-  groupCtx.command("check <username: string>")
-    .action(async (argv, username) => {
-      const userConfigList: IUserConfig[] = [];
+  groupCtx.command("check <...usernameList>")
+    .action(async (argv, ...usernameList) => {
+      const groupConfig = await ctx.mongoDatabase.getGroupConfig(argv.session.guildId);
+      let msgList: string[] = [];
 
-      if (username == "*") {
-        const groupConfig = await ctx.mongoDatabase.getGroupConfig(argv.session.guildId);
-        userConfigList.push(...Object.values(groupConfig.userConfigMap));
-      } else {
-        const userConfigResult = await ctx.mongoDatabase.getUserConfig(argv.session.guildId, undefined, username);
-        if (userConfigResult.state == false) return userConfigResult.content;
-
-        userConfigList.push(userConfigResult.content);
-      }
-
-      const msgList: string[] = [];
-      for (const userConfig of userConfigList) {
-        msgList.push(JSON.stringify(userConfig));
+      for (const username of usernameList) {
+        if (username == "*") {
+          return Object.values(groupConfig.userConfigMap).map(userConfig => JSON.stringify(userConfig)).join("\n");
+        } else {
+          const userConfig = Object.values(groupConfig.userConfigMap).find(userConfig => userConfig.username == username);
+          msgList.push(userConfig ? JSON.stringify(userConfig) : `user ${username} not found`);
+        }
       }
 
       return msgList.join("\n");
@@ -316,37 +311,26 @@ export function apply(ctx: Context, config: Config) {
       }
     });
 
-  groupCtx.command("user [username: string]")
+  groupCtx.command("user <...usernameList>")
     .option("add", "")
     .option("delete", "")
-    .action(async (argv, username) => {
-      if (username) {
-        const user: UserV2Result = await ctx.twitterApiClient.client.userByUsername(username);
-        if (user.errors) return `error while finding user, ${user.errors}`;
-        if (argv.options.add) {
-          const result = await ctx.mongoDatabase.createUserConfig(argv.session.guildId, user.data.id, user.data.username);
-          if (result.state == true) {
-            const userIdList = await ctx.mongoDatabase.getRegisteredUserIdList();
-            await ctx.twitterApiClient.updateStreamRule([...userIdList]);
-          }
-          return result.content;
-        } else if (argv.options.delete) {
-          const result = await ctx.mongoDatabase.deleteUserConfig(argv.session.guildId, user.data.id, user.data.username);
-          if (result.state == true) {
-            const userIdList = await ctx.mongoDatabase.getRegisteredUserIdList();
-            await ctx.twitterApiClient.updateStreamRule([...userIdList]);
-          }
-          return result.content;
-        } else {
-          const userConfig = await ctx.mongoDatabase.getUserConfig(argv.session.guildId, user.data.id);
-          if (userConfig.state == false) {
-            return userConfig.content;
-          }
-          return `config for ${username} is ${JSON.stringify(userConfig.content)}`;
+    .check(async (argv, ...usernameList) => {
+      if (!argv.options.add && !argv.options.delete || argv.options.add && argv.options.delete) return "please use exactly one of add and delete";
+    })
+    .action(async (argv, ...usernameList) => {
+      const msgList: string[] = [];
+      for (const username of usernameList) {
+        const user = await ctx.twitterApiClient.client.userByUsername(username);
+        if (user.errors) {
+          msgList.push(`error while finding user, ${user.errors}`);
+          continue;
         }
-      } else {
-        const groupConfig: IGroupConfig = await ctx.mongoDatabase.getGroupConfig(argv.session.guildId);
-        return `user registered: ${Object.keys(groupConfig.userConfigMap).join()}`;
+        const result = argv.options.add ?
+          await ctx.mongoDatabase.createUserConfig(argv.session.guildId, user.data.id, user.data.username) :
+          await ctx.mongoDatabase.deleteUserConfig(argv.session.guildId, user.data.id, user.data.username);
+        msgList.push(`${username}: ${result.content}`);
       }
+
+      return msgList.join("\n");
     });
 }

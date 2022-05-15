@@ -54,8 +54,8 @@ commands:
     usage: |
       获取指定推特用户的设置，或所有推特用户的设置，只能在群聊中使用
     examples: |
-      check Twitter
-        获取用户Twitter的设置
+      check Twitter, bilibiliyami
+        获取用户Twitter, bilibiliyami的设置
       check *
         获取当前群所有用户的设置
 
@@ -119,13 +119,12 @@ commands:
     usage: |
       通过该命令增加或减少当前群的订阅，只能在群聊中使用
     examples: |
-      user --add Twitter
-        增加订阅用户Twitter
+      user --add Twitter, bilibiliyami
+        增加订阅用户Twitter, bilibiliyami
       user --delete Twitter
         减少订阅用户Twitter
 
-      --add和--delete至少出现一个，同时出现时只会处理--add
-
+      --add和--delete必须且只能出现其中一个
       username并不是twitter用户的用户名，而是在用户名下方@后面的字符
       例如：对于推文https://twitter.com/Twitter/status/1509951255388504066，username为Twitter
     options: |
