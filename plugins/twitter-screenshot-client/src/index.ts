@@ -547,6 +547,18 @@ class TwitterScreenshotClient extends Service {
       };
 
       /**
+       * If no css content is provided, add default style on tag to avoid huge image
+       */
+      const addDefaultCSS = () => {
+        const styleElement = document.createElement("style");
+        styleElement.innerHTML = `
+        .tag {
+          height: 1.2em;
+        }`;
+        document.body.appendChild(styleElement);
+      };
+
+      /**
        * Add tag picture to the translation block
        * @param translationBlock the element that contains all translation components
        */
@@ -645,6 +657,7 @@ class TwitterScreenshotClient extends Service {
       }
 
       if (customized.userCSS) addCSS();
+      else addDefaultCSS();
       if (customized.userBackground) addBackground();
 
     }, parsedTranslation, { userCSS, userTag, userBackground });
