@@ -18,6 +18,7 @@ declare module "koishi" {
 export const name = 'mongoDatabase';
 
 const LOGGER = new Logger(name);
+LOGGER.level = 3;
 
 /**
  * This class implements mongo database functionality required for twitter plugin

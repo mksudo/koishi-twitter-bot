@@ -13,6 +13,7 @@ declare module "koishi" {
 export const name = 'twitterApiClient';
 
 const LOGGER = new Logger(name);
+LOGGER.level = 3;
 
 /**
  * This class implements the interaction between twitter api and current bot

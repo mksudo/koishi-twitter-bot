@@ -3,6 +3,7 @@ dist
 logs
 utils
 accounts
+resources
 
 koishi.yml
 node_modules

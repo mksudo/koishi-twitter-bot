@@ -19,6 +19,7 @@ declare module "koishi" {
 export const name = 'twitterScreenshotClient';
 
 const LOGGER = new Logger(name);
+LOGGER.level = 3;
 
 /**
  * This class implements the functionality to take screenshot of tweets and add translation to tweets

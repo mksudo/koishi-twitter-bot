@@ -15,6 +15,7 @@ declare module "koishi" {
 export const name = 'baiduTranslate';
 
 const LOGGER = new Logger(name);
+LOGGER.level = 3;
 
 // hard coded according to standard
 const SALT_RANGE = [32768, 65536] as const;

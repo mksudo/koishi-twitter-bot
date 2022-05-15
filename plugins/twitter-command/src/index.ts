@@ -4,17 +4,17 @@ import BaiduTranslateClient, { name as baiduTranslateName } from "koishi-plugin-
 import MongoDatabaseClient, { CustomizableUserConfigKeys, IGroupConfig, IUserConfig, makeUserConfig, name as mongoDatabaseName, SwitchableUserConfigKeys, UserConfigModifier } from "koishi-plugin-mongo-database";
 import TwitterApiClient, { name as twitterApiClientName } from "koishi-plugin-twitter-api-client";
 import TwitterScreenshotClient, { name as twitterScreenshotClientName } from "koishi-plugin-twitter-screenshot-client";
-import { ETwitterStreamEvent, UserV2Result } from 'twitter-api-v2';
+import { ETwitterStreamEvent, TweetStream, TweetV2SingleResult, UserV2Result } from 'twitter-api-v2';
 import { customAlphabet } from "nanoid/async";
 import { alphanumeric } from "nanoid-dictionary";
 import { parseScreenshotResultToSegments, saveToFile } from './utils';
-import * as ZH_LOCALS from "./zhLocals";
 
 export const name = 'twitterCommand';
 
 const LOGGER = new Logger(name);
+LOGGER.level = 3;
 
-export const using = [baiduTranslateName, mongoDatabaseName, twitterApiClientName, twitterScreenshotClientName] as const;
+// export const using = [baiduTranslateName, mongoDatabaseName, twitterApiClientName, twitterScreenshotClientName] as const;
 
 export interface Config {
   botId: string,
@@ -26,71 +26,88 @@ export const schema: Schema<Config> = Schema.object({
   superUserId: Schema.string().required().description("id of superuser"),
 });
 
+function createTwitterStreamEventHandler(event: string, loggerFunction: Logger.Function, format?: string) {
+  return (...args: any[]) => format ? loggerFunction(`stream event ${event}${format}`, args) : loggerFunction(`stream event ${event}`);
+}
+
 export function apply(ctx: Context, config: Config) {
-  const groupCtx = ctx.guild();
+  const dataErrorEventHandler = createTwitterStreamEventHandler("data error", LOGGER.warn, "%s");
+  const connectErrorEventHandler = createTwitterStreamEventHandler("connect error", LOGGER.warn, "%s");
+  const reconnectErrorEventHandler = createTwitterStreamEventHandler("reconnect error", LOGGER.warn, "%s");
+  const connectionErrorEventHandler = createTwitterStreamEventHandler("connection error", LOGGER.warn, "%s");
+  const tweetParseErrorEventHandler = createTwitterStreamEventHandler("tweet parse error", LOGGER.warn, "%s");
 
-  ctx.on("ready", async () => {
-    // disabled because of a bug in yaml-register
-    ctx.i18n.define("zh", require("./locales/zh"));
+  const connectedEventHandler = createTwitterStreamEventHandler("connected", LOGGER.debug);
+  const connectionClosedEventHandler = createTwitterStreamEventHandler("connection closed", LOGGER.warn);
+  const connectionLostEventHandler = createTwitterStreamEventHandler("connection lost", LOGGER.warn);
+  const reconnectedEventHandler = createTwitterStreamEventHandler("reconnected", LOGGER.debug);
+  const reconnectAttemptEventHandler = createTwitterStreamEventHandler("reconnect attempt", LOGGER.debug, "reconnect time %d");
 
-    ctx.twitterApiClient.stream.on(ETwitterStreamEvent.Error, (errorPayload) => {
-      LOGGER.warn(`${errorPayload.type}: ${errorPayload.error} \n\n ${errorPayload.message || ""}`);
-    });
+  const dataEventHandler = async (tweet: TweetV2SingleResult) => {
+    const bot = ctx.bots.get(config.botId);
+    if (!bot) {
+      LOGGER.warn(`botId ${config.botId} not found`);
+      return;
+    }
 
-    ctx.twitterApiClient.stream.on(ETwitterStreamEvent.Connected, () => LOGGER.debug("stream connected"));
-    ctx.twitterApiClient.stream.on(ETwitterStreamEvent.ConnectionClosed, () => LOGGER.debug("stream connection closed"));
-    ctx.twitterApiClient.stream.on(ETwitterStreamEvent.ConnectionLost, () => LOGGER.debug("stream connection lost"));
-    ctx.twitterApiClient.stream.on(ETwitterStreamEvent.Reconnected, () => LOGGER.debug("stream reconnected"));
-    ctx.twitterApiClient.stream.on(ETwitterStreamEvent.ReconnectAttempt, (time) => LOGGER.debug(`stream reconnection, attempt ${time}`));
+    let tweetType: "tweet" | "retweet" | "comment" = "tweet";
+    if (tweet.data.in_reply_to_user_id) {
+      tweetType = "comment";
+    } else if (tweet.data.referenced_tweets && tweet.data.referenced_tweets[0].type == "retweeted") {
+      tweetType = "retweet";
+    }
 
-    ctx.twitterApiClient.stream.on(ETwitterStreamEvent.Data, async (tweet) => {
-      const bot = ctx.bots.get(config.botId);
-      if (!bot) {
-        LOGGER.warn(`botId ${config.botId} not found`);
+    const username = tweet.includes.users[0].username;
+    LOGGER.debug(`received ${tweetType} from ${username}`);
+
+    const url = `https://twitter.com/${username}/status/${tweet.data.id}`;
+
+    const groupConfigList = await ctx.mongoDatabase.getGroupConfigListByRegisteredUser(tweet.data.author_id);
+    const subscribedList = groupConfigList.filter(groupConfig => groupConfig.userConfigMap[tweet.data.author_id][tweetType]);
+
+    if (subscribedList.length) {
+      const gotoResult = await ctx.twitterScreenshotClient.goto(url);
+      if (gotoResult.state == false) {
+        for (const groupConfig of subscribedList) {
+          await bot.sendMessage(groupConfig.guildId, gotoResult.content).catch(() => LOGGER.warn("send message error"));
+        }
         return;
       }
 
-      let tweetType: "tweet" | "retweet" | "comment" = "tweet";
-      if (tweet.data.in_reply_to_user_id) {
-        tweetType = "comment";
-      } else if (tweet.data.referenced_tweets && tweet.data.referenced_tweets[0].type == "retweeted") {
-        tweetType = "retweet";
-      }
-
-      const username = tweet.includes.users[0].username;
-      LOGGER.debug(`received ${tweetType} from ${username}`);
-
-      const url = `https://twitter.com/${username}/status/${tweet.data.id}`;
-
-      const groupConfigList = await ctx.mongoDatabase.getGroupConfigListByRegisteredUser(tweet.data.author_id);
-      const subscribedList = groupConfigList.filter(groupConfig => groupConfig.userConfigMap[tweet.data.author_id][tweetType]);
-
-      if (subscribedList.length) {
-        const gotoResult = await ctx.twitterScreenshotClient.goto(url);
-        if (gotoResult.state == false) {
-          for (const groupConfig of subscribedList) {
-            await bot.sendMessage(groupConfig.guildId, gotoResult.content).catch(() => LOGGER.warn("send message error"));
-          }
-          return;
-        }
-
-        const screenshotResult = await ctx.twitterScreenshotClient.screenshot(gotoResult.content);
-        if (screenshotResult.state == false) {
-          for (const groupConfig of subscribedList) {
-            await bot.sendMessage(groupConfig.guildId, screenshotResult.content).catch(() => LOGGER.warn("send message error"));
-          }
-          return;
-        }
-
+      const screenshotResult = await ctx.twitterScreenshotClient.screenshot(gotoResult.content);
+      if (screenshotResult.state == false) {
         for (const groupConfig of subscribedList) {
-          const userConfig = groupConfig.userConfigMap[tweet.data.author_id];
-          const msg = await parseScreenshotResultToSegments(screenshotResult.content, userConfig, ctx.baiduTranslate);
-          const historyIndex = await ctx.mongoDatabase.addHistory(groupConfig.guildId, `${username}/status/${tweet.data.id}`);
-          await bot.sendMessage(groupConfig.guildId, msg + `\n[INDEX]: ${historyIndex}`).catch(() => LOGGER.warn("send message error"));
+          await bot.sendMessage(groupConfig.guildId, screenshotResult.content).catch(() => LOGGER.warn("send message error"));
         }
+        return;
       }
-    });
 
+      for (const groupConfig of subscribedList) {
+        const userConfig = groupConfig.userConfigMap[tweet.data.author_id];
+        const msg = await parseScreenshotResultToSegments(screenshotResult.content, userConfig, ctx.baiduTranslate);
+        const historyIndex = await ctx.mongoDatabase.addHistory(groupConfig.guildId, `${username}/status/${tweet.data.id}`);
+        await bot.sendMessage(groupConfig.guildId, msg + `\n[INDEX]: ${historyIndex}`).catch(() => LOGGER.warn("send message error"));
+      }
+    }
+  }
+
+  const groupCtx = ctx.guild();
+
+  ctx.on("ready", async () => {
+    ctx.i18n.define("zh", require("./locales/zh"));
+
+    ctx.twitterApiClient.stream
+      .on(ETwitterStreamEvent.DataError, dataErrorEventHandler)
+      .on(ETwitterStreamEvent.ConnectError, connectErrorEventHandler)
+      .on(ETwitterStreamEvent.ReconnectError, reconnectErrorEventHandler)
+      .on(ETwitterStreamEvent.ConnectionError, connectionErrorEventHandler)
+      .on(ETwitterStreamEvent.TweetParseError, tweetParseErrorEventHandler)
+      .on(ETwitterStreamEvent.Connected, connectedEventHandler)
+      .on(ETwitterStreamEvent.ConnectionClosed, connectionClosedEventHandler)
+      .on(ETwitterStreamEvent.ConnectionLost, connectionLostEventHandler)
+      .on(ETwitterStreamEvent.Reconnected, reconnectedEventHandler)
+      .on(ETwitterStreamEvent.ReconnectAttempt, reconnectAttemptEventHandler)
+      .on(ETwitterStreamEvent.Data, dataEventHandler);
 
     const uidList = await ctx.mongoDatabase.getRegisteredUserIdList();
     LOGGER.debug(`establishing stream with user ids ${JSON.stringify(uidList)}`);
@@ -103,7 +120,19 @@ export function apply(ctx: Context, config: Config) {
   });
 
   ctx.on("dispose", async () => {
-    ctx.twitterApiClient.stream.removeAllListeners(ETwitterStreamEvent.Data);
+    ctx.twitterApiClient.stream
+      .removeListener(ETwitterStreamEvent.DataError, dataErrorEventHandler)
+      .removeListener(ETwitterStreamEvent.ConnectError, connectErrorEventHandler)
+      .removeListener(ETwitterStreamEvent.ReconnectError, reconnectErrorEventHandler)
+      .removeListener(ETwitterStreamEvent.ConnectionError, connectionErrorEventHandler)
+      .removeListener(ETwitterStreamEvent.TweetParseError, tweetParseErrorEventHandler)
+      .removeListener(ETwitterStreamEvent.Connected, connectedEventHandler)
+      .removeListener(ETwitterStreamEvent.ConnectionClosed, connectionClosedEventHandler)
+      .removeListener(ETwitterStreamEvent.ConnectionLost, connectionLostEventHandler)
+      .removeListener(ETwitterStreamEvent.Reconnected, reconnectedEventHandler)
+      .removeListener(ETwitterStreamEvent.ReconnectAttempt, reconnectAttemptEventHandler)
+      .removeListener(ETwitterStreamEvent.Data, dataEventHandler);
+
     LOGGER.debug("plugin end");
   });
 
@@ -225,7 +254,7 @@ export function apply(ctx: Context, config: Config) {
     });
 
   groupCtx.command("set <username: string> <...keys>")
-    .option("off", ZH_LOCALS.COMMAND_SET.options.off)
+    .option("off", "")
     .check(async (argv, username, ...keys) => {
       for (const key of keys) {
         if (!SwitchableUserConfigKeys.includes(key as (typeof SwitchableUserConfigKeys)[number]) &&
@@ -288,8 +317,8 @@ export function apply(ctx: Context, config: Config) {
     });
 
   groupCtx.command("user [username: string]")
-    .option("add", ZH_LOCALS.COMMAND_USER.options.add)
-    .option("delete", ZH_LOCALS.COMMAND_USER.options.delete)
+    .option("add", "")
+    .option("delete", "")
     .action(async (argv, username) => {
       if (username) {
         const user: UserV2Result = await ctx.twitterApiClient.client.userByUsername(username);
