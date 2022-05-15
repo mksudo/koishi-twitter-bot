@@ -556,10 +556,15 @@ class TwitterScreenshotClient extends Service {
        */
       const addDefaultCSS = () => {
         const styleElement = document.createElement("style");
+        const size = "2.4em";
         styleElement.innerHTML = `
+        .text {
+          font-size: ${size};
+        }
         .tag {
-          height: 1.2em;
-        }`;
+          height: ${size};
+        }
+        `;
         document.body.appendChild(styleElement);
       };
 
