@@ -248,6 +248,7 @@ class TwitterScreenshotClient extends Service {
       LOGGER.debug("start expanding content");
       await this.expandCollapsedContent(page);
       LOGGER.debug("end expanding content");
+      await waitForTime(1000);
 
       LOGGER.debug("start waiting for image");
       await this.waitForImageLoading(page);

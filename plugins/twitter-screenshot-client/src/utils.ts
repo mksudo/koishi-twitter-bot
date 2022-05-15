@@ -29,7 +29,7 @@ export function getRandomDelay(min: number, max: number) {
  * @param miliseconds time to wait for in milisecond
  */
 export async function waitForTime(miliseconds: number) {
-  await new Promise(resolve => setTimeout(resolve, miliseconds));
+  return new Promise(resolve => setTimeout(resolve, miliseconds));
 }
 
 import twemoji from "twemoji";
