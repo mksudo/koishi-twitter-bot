@@ -65,13 +65,13 @@ function parseTweetComponentList(components: ITweetComponent[]) {
  * @param userConfig current user config
  * @returns parsed string
  */
-async function parseTweetToSegments(tweet: ITweet, userConfig: IUserConfig, translator: BaiduTranslationClient): Promise<string> {
+async function parseTweetToSegments(tweet: ITweet, isMainTweet: boolean, userConfig: IUserConfig, translator: BaiduTranslationClient): Promise<string> {
   const result: string[] = [];
 
   if (userConfig.text) {
     const text = parseTweetComponentList(tweet.elements);
     result.push(text);
-    if (userConfig.translation) {
+    if (userConfig.translation && isMainTweet) {
       const translateResult = await translator.translate(text);
       result.push(segment("text", { content: "[TRANSLATION]\n" }) + translateResult.content);
     }
@@ -112,7 +112,7 @@ async function parseTweetToSegments(tweet: ITweet, userConfig: IUserConfig, tran
           break;
         case "tweet":
           currentBlock = segment("text", { content: "[TWEET]\n" });
-          currentBlock = await parseTweetToSegments(element.tweet, userConfig, translator);
+          currentBlock = await parseTweetToSegments(element.tweet, isMainTweet, userConfig, translator);
           result.push(currentBlock);
           break;
       }
@@ -136,9 +136,12 @@ export async function parseScreenshotResultToSegments(screenshotResult: IScreens
   }
 
   if (screenshotResult.tweetList.length == 1) {
-    return result + await parseTweetToSegments(screenshotResult.tweetList[0], userConfig, translator);
+    return result + await parseTweetToSegments(screenshotResult.tweetList[0], true, userConfig, translator);
   } else {
-    const textList = await Promise.all(screenshotResult.tweetList.map(async (tweet, index) => `[${index + 1}]: ${await parseTweetToSegments(tweet, userConfig, translator)}`))
+    const textList = await Promise.all(
+      screenshotResult.tweetList
+        .map(async (tweet, index) => `[${index + 1}]: ${await parseTweetToSegments(tweet, index == screenshotResult.tweetList.length - 1, userConfig, translator)}`)
+    );
     return result + textList.join("\n");
   }
 }

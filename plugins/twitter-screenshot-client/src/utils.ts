@@ -1,4 +1,8 @@
 import { Err, Ok } from "./model";
+import twemoji from "twemoji";
+import emojiRegex from "emoji-regex";
+import { ITweetComponent } from "./model";
+
 
 export function ok<T>(content: T): Ok<T> {
   return {
@@ -28,14 +32,9 @@ export function getRandomDelay(min: number, max: number) {
  * Wait for a given amount of time
  * @param miliseconds time to wait for in milisecond
  */
-export async function waitForTime(miliseconds: number) {
+export function waitForTime(miliseconds: number) {
   return new Promise(resolve => setTimeout(resolve, miliseconds));
 }
-
-import twemoji from "twemoji";
-import emojiRegex from "emoji-regex";
-import { ITweetComponent } from "./model";
-
 
 /**
  * Represents the translation block for tweet or extended entity

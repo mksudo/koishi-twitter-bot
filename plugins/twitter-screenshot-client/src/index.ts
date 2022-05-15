@@ -240,9 +240,6 @@ class TwitterScreenshotClient extends Service {
       }
 
       await this.setViewPort(page);
-      await page.evaluate(() => {
-        window.scrollTo(0, 0);
-      });
       await waitForTime(1000);
 
       LOGGER.debug("start expanding content");
@@ -253,6 +250,10 @@ class TwitterScreenshotClient extends Service {
       LOGGER.debug("start waiting for image");
       await this.waitForImageLoading(page);
       LOGGER.debug("end waiting for image");
+
+      await page.evaluate(() => {
+        window.scrollTo(0, 0);
+      });
 
       this.occupied = false;
       return ok(page);
