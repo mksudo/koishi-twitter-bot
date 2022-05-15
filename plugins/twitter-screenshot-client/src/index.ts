@@ -256,6 +256,7 @@ class TwitterScreenshotClient extends Service {
       this.occupied = false;
       return ok(page);
     } catch (error) {
+      this.occupied = false;
       return err(`${error}`);
     }
   }
@@ -475,6 +476,7 @@ class TwitterScreenshotClient extends Service {
       }
       return ok(result);
     } catch (error) {
+      this.occupied = false;
       return err(`${error}`);
     }
   }
