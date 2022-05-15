@@ -210,7 +210,7 @@ export function apply(ctx: Context, config: Config) {
         // dummy config
         userConfig = makeUserConfig("", "");
       } else {
-        return "unknown input, please input url or index number";
+        return "未知输入，请提供推文链接或序号";
       }
 
       // get user translation input
@@ -241,7 +241,7 @@ export function apply(ctx: Context, config: Config) {
           return Object.values(groupConfig.userConfigMap).map(userConfig => JSON.stringify(userConfig)).join("\n");
         } else {
           const userConfig = Object.values(groupConfig.userConfigMap).find(userConfig => userConfig.username == username);
-          msgList.push(userConfig ? JSON.stringify(userConfig) : `user ${username} not found`);
+          msgList.push(userConfig ? JSON.stringify(userConfig) : `无法找到用户${username}`);
         }
       }
 
@@ -278,9 +278,13 @@ export function apply(ctx: Context, config: Config) {
         if (SwitchableUserConfigKeys.includes(key as (typeof SwitchableUserConfigKeys)[number])) {
           modifier[key] = !off;
         } else {
-          await argv.session.send(`please input content for ${key}`);
+          if (key == "css") {
+            const defaultCSSTemplate = await fs.promises.readFile("./resources/defaultCSS.css", { encoding: "utf-8" });
+            await argv.session.sendQueued(`默认css模板为：\n${defaultCSSTemplate}`);
+          }
+          await argv.session.sendQueued(`请输入设置${key}的内容`);
           const result = segment.parse(await argv.session.prompt());
-          if (result.length != 1) return `invalid amount of content supplied for setting ${key}`;
+          if (result.length != 1) return `为设置${key}提供的参数数量错误，需求1，当前为${result.length}`;
           const content = result[0];
 
           const filenameGenerator = customAlphabet(alphanumeric, 10);
@@ -291,7 +295,8 @@ export function apply(ctx: Context, config: Config) {
           await fs.promises.mkdir(dir, { recursive: true });
 
           const filepath = `${dir}/${filename}.${suffix}`;
-          if (key == "css" && content.type != "text" || key != "css" && content.type != "image") return "invalid content supplied";
+          if (key == "css" && content.type != "text" || key != "css" && content.type != "image")
+            return `内容类型错误，需求${key == "css" ? "text" : "image"}， 当前为${content.type}`;
 
           await saveToFile(content, filepath).then(() => {
             modifier[key] = filepath;
@@ -315,14 +320,15 @@ export function apply(ctx: Context, config: Config) {
     .option("add", "")
     .option("delete", "")
     .check(async (argv, ...usernameList) => {
-      if (!argv.options.add && !argv.options.delete || argv.options.add && argv.options.delete) return "please use exactly one of add and delete";
+      if (!argv.options.add && !argv.options.delete || argv.options.add && argv.options.delete)
+        return "请提供且仅提供一个参数";
     })
     .action(async (argv, ...usernameList) => {
       const msgList: string[] = [];
       for (const username of usernameList) {
         const user = await ctx.twitterApiClient.client.userByUsername(username);
         if (user.errors) {
-          msgList.push(`error while finding user, ${user.errors}`);
+          msgList.push(`无法找到用户${username}, 错误：\n${user.errors}`);
           continue;
         }
         const result = argv.options.add ?

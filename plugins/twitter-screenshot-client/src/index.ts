@@ -90,6 +90,7 @@ class TwitterScreenshotClient extends Service {
 
     if (result.ok()) {
       await page.waitForSelector("article");
+      await page.waitForNetworkIdle();
       LOGGER.debug("goto succeed");
     } else {
       throw new Error(`goto failed with code ${result.status()}`);

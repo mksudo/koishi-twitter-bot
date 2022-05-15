@@ -94,12 +94,12 @@ class MongoDatabase extends Service {
   async getUserConfig(guildId: string, userid?: string, username?: string) {
     const groupConfig = await this.getGroupConfig(guildId);
     if (userid) {
-      return userid in groupConfig.userConfigMap ? ok(groupConfig.userConfigMap[userid]) : err(`unknown user ${userid}`);
+      return userid in groupConfig.userConfigMap ? ok(groupConfig.userConfigMap[userid]) : err(`无法找到用户${userid}`);
     } else if (username) {
       const userConfig = Object.values(groupConfig.userConfigMap).find(userConfig => userConfig.username == username);
-      return userConfig ? ok(userConfig) : err(`unknown user ${username}`);
+      return userConfig ? ok(userConfig) : err(`无法找到用户${username}`);
     } else {
-      return err(`please supply at least one of userid and username`);
+      return err("请至少提供userid和username中的一个");
     }
   }
 
@@ -121,11 +121,11 @@ class MongoDatabase extends Service {
    */
   async createUserConfig(guildId: string, userid: string, username: string) {
     if ((await this.getUserConfig(guildId, userid)).state) {
-      return err(`user ${username} is already registered`);
+      return err(`用户${username}已被注册，无法再次注册`);
     }
     const userConfig = makeUserConfig(userid, username);
     await this.groupConfigCollection.findOneAndUpdate({ guildId }, { $set: { [`userConfigMap.${userid}`]: userConfig } });
-    return ok(`user ${username} is registered`);
+    return ok(`用户${username}注册完毕`);
   }
 
   /**
@@ -138,9 +138,9 @@ class MongoDatabase extends Service {
   async deleteUserConfig(guildId: string, userid: string, username: string) {
     if ((await this.getUserConfig(guildId, userid, username)).state) {
       await this.groupConfigCollection.findOneAndUpdate({ guildId }, { $unset: { [`userConfigMap.${userid}`]: "" } });
-      return ok(`user ${username} is unregistered`);
+      return ok(`用户${username}取消注册完毕`);
     }
-    return err(`user ${username} is not registered`);
+    return err(`用户${username}尚未被注册，无法取消注册`);
   }
 
   /**
@@ -158,9 +158,9 @@ class MongoDatabase extends Service {
         modifyMap[`userConfigMap.${userid}.${key}`] = value;
       }
       await this.groupConfigCollection.findOneAndUpdate({ guildId }, { $set: modifyMap });
-      return ok(`user config for user ${username || userid} is modified`);
+      return ok(`用户${username || userid}的设置已更改`);
     }
-    return err(`user ${username || userid} is not registered`);
+    return err(`用户${username || userid}尚未被注册，无法更改设置`);
   }
 
   /**
@@ -197,7 +197,7 @@ class MongoDatabase extends Service {
     const groupConfig = await this.getGroupConfig(guildId);
     const realIndex = groupConfig.historyList.length - (groupConfig.currentIndex - historyIndex) - 1;
     if (realIndex < 0 || realIndex > groupConfig.historyList.length - 1) {
-      return err(`index out of range`);
+      return err(`序号超出范围${1}-${groupConfig.historyList.length}`);
     }
     return ok(groupConfig.historyList[realIndex]);
   }
