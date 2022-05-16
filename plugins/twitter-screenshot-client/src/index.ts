@@ -556,9 +556,9 @@ class TwitterScreenshotClient extends Service {
        */
       const addDefaultCSS = () => {
         const styleElement = document.createElement("style");
-        const size = "2.4em";
+        const size = "1.6em";
         styleElement.innerHTML = `
-        .text {
+        .translation {
           font-size: ${size};
         }
         .tag {
