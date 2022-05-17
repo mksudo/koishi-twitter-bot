@@ -32,8 +32,10 @@ class TwitterApiClient extends Service {
     this.stream = this.stream || await this.client.searchStream({
       "tweet.fields": ["entities", "in_reply_to_user_id", "referenced_tweets"],
       "user.fields": ["id", "username"],
-      "expansions": ["author_id"],
+      expansions: ["author_id"],
+      autoConnect: true,
     });
+    this.stream.autoReconnectRetries = Infinity;
     LOGGER.debug("service start");
   }
 
