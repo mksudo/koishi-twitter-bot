@@ -1,6 +1,6 @@
-import { Err, Ok } from "./model";
 import twemoji from "twemoji";
 import emojiRegex from "emoji-regex";
+import { Err, Ok } from "./model";
 import { ITweetComponent } from "./model";
 
 
@@ -141,7 +141,7 @@ function parseEmojiToCodePoint(text: string): ITweetComponent[] {
  */
 export function parseMinorTranslation(text: string): MinorTranslationBlock[] {
   const result: MinorTranslationBlock[] = [];
-  const segments = text.split(/(?<index><\d+.*\d*>)/gm);
+  const segments = text.split(/<(?<index>\d+.*\d*)>/gm);
 
   if (segments[0] != "") {
     result.push({

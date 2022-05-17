@@ -81,16 +81,14 @@ class TwitterScreenshotClient extends Service {
    */
   protected async gotoUrl(page: Page, url: string) {
     LOGGER.debug(`start goto ${url}`);
-    const retryGoto = retryDecorator(page.goto.bind(page), { retries: 3, delay: 1000 });
+    const retryGoto = retryDecorator(page.goto.bind(page), { retries: 3, delay: 1000, timeout: "INFINITELY" });
 
-    const result = await retryGoto(url, {
+    const result: puppeteer.HTTPResponse = await retryGoto(url, {
       waitUntil: "domcontentloaded",
-      timeout: 15000,
     });
 
     if (result.ok()) {
       await page.waitForSelector("article");
-      await page.waitForNetworkIdle();
       LOGGER.debug("goto succeed");
     } else {
       throw new Error(`goto failed with code ${result.status()}`);
@@ -156,9 +154,10 @@ class TwitterScreenshotClient extends Service {
 
     nextButton = (await page.$$("div[role=button]"))[2];
     await nextButton.click();
-    await page.waitForNetworkIdle();
+    await page.waitForSelector("input");
 
     // handle possible phone verification on new login location
+    // TODO: fix determine order issue
     const verificationInput = await page.$("input");
 
     if (verificationInput) {
