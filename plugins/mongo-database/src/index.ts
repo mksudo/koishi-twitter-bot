@@ -210,8 +210,7 @@ class MongoDatabase extends Service {
     const useridList: string[] = [];
     const groupConfigList = await this.groupConfigCollection.find().toArray();
     groupConfigList.forEach(groupConfig => {
-      // TODO: unknown issue that cause key to become negative string
-      useridList.push(...Object.values(groupConfig.userConfigMap).map(userConfig => userConfig.userid));
+      useridList.push(...Object.keys(groupConfig.userConfigMap));
     });
     return [...new Set(useridList)];
   }

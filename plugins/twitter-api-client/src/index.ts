@@ -53,21 +53,16 @@ class TwitterApiClient extends Service {
 
     let currRule = "";
 
-    for (const uid of uidList) {
-      if (currRule == "") {
-        currRule = `from:${uid}`;
-      }
-      else {
-        const nextRule = `${currRule} OR from:${uid}`;
-        // twitter api restriction, single rule length must not be longer than 512 characters
-        if (nextRule.length <= 512) {
-          currRule = nextRule;
-        }
-        else {
+    for (const uidRule of uidList.map(uid => `from:${uid}`)) {
+      if (currRule) {
+        const nextRule = `${currRule} OR ${uidRule}`;
+        // twitter api restriction, rule hosuld not exceed 512 characters
+        if (nextRule.length > 512) {
           ruleList.push({ value: currRule });
-          currRule = "";
-        }
+          currRule = uidRule;
+        } else currRule = nextRule;
       }
+      else currRule = uidRule;
     }
 
     ruleList.push({ value: currRule });
