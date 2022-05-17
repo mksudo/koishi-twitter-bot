@@ -202,13 +202,20 @@ export function apply(ctx: Context, config: Config) {
         if (userConfigResult.state == false) return userConfigResult.content;
 
         userConfig = userConfigResult.content;
-      } else if (indexOrUrl.startsWith("https://twitter.com/")) {
+      } else if (indexOrUrl.startsWith("https://")) {
         // is url
         LOGGER.debug(`translate for url ${indexOrUrl}`);
         url = indexOrUrl;
 
+        // match for username
+        const matchedUsername = url.match(/\w+(?=\/status)/gm);
+        if (!matchedUsername) return "链接错误，无法匹配到<username>/status字段";
+        const username = matchedUsername[0];
+
+        const currentUserConfig = await ctx.mongoDatabase.getUserConfig(argv.session.guildId, undefined, username);
+
         // dummy config
-        userConfig = makeUserConfig("", "");
+        userConfig = currentUserConfig.state ? currentUserConfig.content : makeUserConfig("", "");
       } else {
         return "未知输入，请提供推文链接或序号";
       }
