@@ -58,6 +58,12 @@ commands:
         获取用户Twitter, bilibiliyami的设置
       check *
         获取当前群所有用户的设置
+      check --tag --css bilibiliyami
+        获取用户bilibiliyami的tag和css设置内容
+    options:
+      css: 查看css内容
+      tag: 查看tag内容
+      background: 查看background内容
 
   set:
     description: 更改多个推特用户的设置

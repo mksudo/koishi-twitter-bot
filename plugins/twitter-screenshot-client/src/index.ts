@@ -4,7 +4,7 @@ import puppeteer, { Browser, Page, Viewport } from "puppeteer-core";
 import { retryDecorator } from "ts-retry-promise";
 import { IUserConfig } from "koishi-plugin-mongo-database";
 import { IScreenshotResult, ITweet, ITweetComponent, ITweetEntity, IScreenshotPageResult } from './model';
-import { err, getRandomDelay, MajorTranslationBlock, ok, parseMajorTranslation, waitForTime } from './utils';
+import { err, getRandomDelay, MajorTranslationBlock, ok, parseMajorTranslationlock, waitForTime } from './utils';
 
 export * from "./model";
 
@@ -491,7 +491,7 @@ class TwitterScreenshotClient extends Service {
    */
   async translate(page: Page, text: string, userConfig: IUserConfig) {
     LOGGER.debug("translation procedure starts");
-    const parsedTranslation = parseMajorTranslation(text);
+    const parsedTranslation = parseMajorTranslationlock(text);
     LOGGER.debug(`translation block list: ${JSON.stringify(parsedTranslation)}`);
     const loadCustomContentPromises: Promise<string>[] = [];
 
@@ -519,18 +519,39 @@ class TwitterScreenshotClient extends Service {
         translationBlock.className = "translation";
 
         for (const block of translation) {
-          if (block.type == "text") {
-            const textElement = document.createElement("span");
-            // hard coded, if no custom setting, use twitter css class for text
-            textElement.className = customized.userCSS ? "text" : "css-901oao css-16my406 r-poiln3 r-bcqeeo r-qvutc0";
-            textElement.innerText = block.content;
-            translationBlock.appendChild(textElement);
-          } else if (block.type == "emoji") {
-            const emojiElement = document.createElement("img");
-            // hard coded, if no custom setting, use twitter css class for emoji
-            emojiElement.className = customized.userCSS ? "emoji" : "r-4qtqp9 r-dflpy8 r-sjv1od r-zw8f10 r-10akycc r-h9hxbl";
-            emojiElement.src = `https://abs-0.twimg.com/emoji/v2/svg/${block.content}.svg`;
-            translationBlock.appendChild(emojiElement);
+          switch (block.type) {
+            case "text":
+              const textElement = document.createElement("span");
+              // hard coded, if no custom setting, use twitter css class for text
+              textElement.className = customized.userCSS ? "text" : "css-901oao css-16my406 r-poiln3 r-bcqeeo r-qvutc0";
+              textElement.innerText = block.content;
+              translationBlock.appendChild(textElement);
+              break;
+            case "emoji":
+              const emojiElement = document.createElement("img");
+              // hard coded, if no custom setting, use twitter css class for emoji
+              emojiElement.className = customized.userCSS ? "emoji" : "r-4qtqp9 r-dflpy8 r-sjv1od r-zw8f10 r-10akycc r-h9hxbl";
+              emojiElement.src = `https://abs-0.twimg.com/emoji/v2/svg/${block.content}.svg`;
+              translationBlock.appendChild(emojiElement);
+              break;
+            case "link":
+              const linkElement = document.createElement("a");
+              // hard coded, if no custom setting, use twitter css class for link
+              linkElement.className = customized.userCSS ? "link" : "css-4rbku5 css-18t94o4 css-901oao css-16my406 r-1cvl2hr r-1loqt21 r-poiln3 r-bcqeeo r-qvutc0";
+              linkElement.innerText = block.content;
+              translationBlock.appendChild(linkElement);
+              break;
+            case "mention":
+            case "hashtag":
+              const hashtagSpanElement = document.createElement("span");
+              hashtagSpanElement.className = "r-18u37iz";
+              const hashtagElement = document.createElement("a");
+              // hard coded, if no custom setting, use twitter css class for link
+              hashtagElement.className = customized.userCSS ? block.type : "css-4rbku5 css-18t94o4 css-901oao css-16my406 r-1cvl2hr r-1loqt21 r-poiln3 r-bcqeeo r-qvutc0";
+              hashtagElement.innerText = block.content;
+              hashtagSpanElement.appendChild(hashtagElement);
+              translationBlock.appendChild(hashtagSpanElement);
+              break;
           }
         }
 

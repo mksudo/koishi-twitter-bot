@@ -43,8 +43,15 @@ export interface ITweetHashtag {
   type: "hashtag",
   content: string,
 }
+/**
+ * Represents the mention user block on tweet page
+ */
+export interface ITweetMention {
+  type: "mention",
+  content: string,
+}
 // all tweet components
-export type ITweetComponent = ITweetText | ITweetEmoji | ITweetLink | ITweetHashtag;
+export type ITweetComponent = ITweetText | ITweetEmoji | ITweetLink | ITweetHashtag | ITweetMention;
 /**
  * Represents the photo entities on tweet page
  */

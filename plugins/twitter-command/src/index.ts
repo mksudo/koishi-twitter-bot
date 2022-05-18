@@ -239,16 +239,55 @@ export function apply(ctx: Context, config: Config) {
     });
 
   groupCtx.command("check <...usernameList>")
+  .option("css", "")
+  .option("tag", "")
+  .option("background", "")
     .action(async (argv, ...usernameList) => {
-      const groupConfig = await ctx.mongoDatabase.getGroupConfig(argv.session.guildId);
+      const groupConfig: IGroupConfig = await ctx.mongoDatabase.getGroupConfig(argv.session.guildId);
+      const userConfigList: IUserConfig[] = [];
       let msgList: string[] = [];
+
+      const contentKeyList: (typeof CustomizableUserConfigKeys[number])[] = [];
+
+      if (argv.options.tag)        contentKeyList.push("tag");
+      if (argv.options.background) contentKeyList.push("background");
+      if (argv.options.css)        contentKeyList.push("css");
 
       for (const username of usernameList) {
         if (username == "*") {
-          return Object.values(groupConfig.userConfigMap).map(userConfig => JSON.stringify(userConfig)).join("\n");
+          userConfigList.splice(0, userConfigList.length);
+          userConfigList.push(...Object.values(groupConfig.userConfigMap));
+          break;
         } else {
           const userConfig = Object.values(groupConfig.userConfigMap).find(userConfig => userConfig.username == username);
-          msgList.push(userConfig ? JSON.stringify(userConfig) : `无法找到用户${username}`);
+          userConfigList.push(userConfig);
+        }
+      }
+
+      for (const [index, userConfig] of userConfigList.entries()) {
+        if (!userConfig) {
+          msgList.push(`用户${usernameList[index]}未找到`);
+          continue;
+        }
+        if (contentKeyList.length) {
+          let content = "";
+          for (const key of contentKeyList) {
+            switch (key) {
+              case "background":
+              case "tag":
+                const imageContent = await fs.promises.readFile(userConfig[key], { encoding: "base64" });
+                content += `${key}: ${segment("image", { url: `base64://${imageContent}`})}`;
+                break;
+              case "css":
+                const fileContent = await fs.promises.readFile(userConfig[key], { encoding: "utf-8" });
+                content += `${key}: ${fileContent}`;
+                break;
+            }
+          }
+          msgList.push(`${userConfig.username}: ${content}`);
+        } else {
+          for (const key of CustomizableUserConfigKeys) delete userConfig[key];
+          msgList.push(`${userConfig.username}: ${JSON.stringify(userConfig)}`);
         }
       }
 

@@ -42,6 +42,7 @@
     "@types/md5": "^2.3.2",
     "@types/nanoid-dictionary": "^4.2.0",
     "@types/node-fetch": "^2.6.1",
+    "@types/twitter-text": "^3.1.1",
     "chrome-finder": "^1.0.7",
     "emoji-regex": "^10.1.0",
     "koishi": "^4.6.1",
@@ -54,6 +55,7 @@
     "ts-retry-promise": "^0.6.1",
     "twemoji": "^14.0.2",
     "twitter-api-v2": "^1.12.0",
+    "twitter-text": "^3.1.0",
     "yaml-register": "^0.1.0",
     "yml-register": "^1.0.0"
   }

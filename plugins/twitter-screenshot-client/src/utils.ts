@@ -1,6 +1,7 @@
 import twemoji from "twemoji";
 import emojiRegex from "emoji-regex";
-import { Err, Ok } from "./model";
+import { extractEntitiesWithIndices } from "twitter-text";
+import { Err, ITweetEmoji, ITweetText, Ok } from "./model";
 import { ITweetComponent } from "./model";
 
 
@@ -186,6 +187,83 @@ export function parseMajorTranslation(text: string): MajorTranslationBlock[] {
       content: parseMinorTranslation(translation[index + 1])
     });
   }
+
+  return result;
+}
+
+
+export function parseMajorTranslationlock(text: string): MajorTranslationBlock[] {
+  const majorIndexRegex = /\[(?<index>\d+)\]/gm;
+  const result: MajorTranslationBlock[] = [];
+  const majorBlockTranslation = text.split(majorIndexRegex);
+
+  if (majorBlockTranslation[0])
+    return [{ index: 1, content: parseMinorTranslationBlock(majorBlockTranslation[0]) }];
+  for (let index = 1; index < majorBlockTranslation.length - 1; index += 2) {
+    result.push({
+      index: parseInt(majorBlockTranslation[index]),
+      content: parseMinorTranslationBlock(majorBlockTranslation[index + 1])
+    });
+  }
+  return result;
+}
+
+export function parseMinorTranslationBlock(text: string): MinorTranslationBlock[] {
+  const minorIndexRegex = /<(?<index>\d+.*\d*)>/gm;
+  const result: MinorTranslationBlock[] = [];
+  const minorBlockTranslation = text.split(minorIndexRegex);
+
+  if (minorBlockTranslation[0]) result.push({ type: "main", content: parseTwitterEntities(minorBlockTranslation[0]) });
+  for (let index = 1; index < minorBlockTranslation.length - 1; index += 2) {
+    result.push({
+      type: "entity",
+      index: parseInt(minorBlockTranslation[index]).toString() == minorBlockTranslation[index] ?
+        parseInt(minorBlockTranslation[index]) : minorBlockTranslation[index],
+      content: parseTwitterEntities(minorBlockTranslation[index + 1])
+    });
+  }
+  return result;
+}
+
+export function parseTwitterEntities(text: string): ITweetComponent[] {
+  const entityBlockIndex = extractEntitiesWithIndices(text);
+  const result: ITweetComponent[] = [];
+
+  let startIndex = 0;
+  for (const entityBlock of entityBlockIndex) {
+    if (entityBlock.indices[0] != startIndex)
+      result.push(...parseSimpleText(text.substring(startIndex, entityBlock.indices[0])));
+    if ("hashtag" in entityBlock)
+      result.push({ type: "hashtag", content: text.substring(entityBlock.indices[0], entityBlock.indices[1]) });
+    else if ("url" in entityBlock)
+      result.push({ type: "link", content: text.substring(entityBlock.indices[0], entityBlock.indices[1]) });
+    else if ("screenName" in entityBlock)
+      result.push({ type: "mention", content: text.substring(entityBlock.indices[0], entityBlock.indices[1]) });
+    else
+      result.push(...parseSimpleText(text.substring(entityBlock.indices[0], entityBlock.indices[1])));
+    startIndex = entityBlock.indices[1];
+  }
+
+  if (startIndex != text.length - 1)
+    result.push(...parseSimpleText(text.substring(startIndex)));
+
+  return result;
+}
+
+export function parseSimpleText(text: string): (ITweetText | ITweetEmoji)[] {
+  const emojiBlockRegex = emojiRegex();
+  const result: (ITweetText | ITweetEmoji)[] = [];
+  const matchedEmojiList = [...text.matchAll(emojiBlockRegex)];
+
+  let startIndex = 0;
+  for (const matchedEmoji of matchedEmojiList) {
+    if (matchedEmoji.index != startIndex)
+      result.push({ type: "text", content: text.substring(startIndex, matchedEmoji.index) });
+    result.push({ type: "emoji", content: twemoji.convert.toCodePoint(matchedEmoji[0])});
+    startIndex = matchedEmoji.index + matchedEmoji[0].length;
+  }
+
+  if (startIndex != text.length - 1) result.push({ type: "text", content: text.substring(startIndex) });
 
   return result;
 }
