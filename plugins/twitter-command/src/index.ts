@@ -4,7 +4,7 @@ import BaiduTranslateClient, { name as baiduTranslateName } from "koishi-plugin-
 import MongoDatabaseClient, { CustomizableUserConfigKeys, IGroupConfig, IUserConfig, makeUserConfig, name as mongoDatabaseName, SwitchableUserConfigKeys, UserConfigModifier } from "koishi-plugin-mongo-database";
 import TwitterApiClient, { name as twitterApiClientName } from "koishi-plugin-twitter-api-client";
 import TwitterScreenshotClient, { name as twitterScreenshotClientName } from "koishi-plugin-twitter-screenshot-client";
-import { ETwitterStreamEvent, TweetStream, TweetV2SingleResult, UserV2Result } from 'twitter-api-v2';
+import { ETwitterStreamEvent, TweetV2SingleResult } from 'twitter-api-v2';
 import { customAlphabet } from "nanoid/async";
 import { alphanumeric } from "nanoid-dictionary";
 import { parseScreenshotResultToSegments, saveToFile } from './utils';
@@ -221,7 +221,7 @@ export function apply(ctx: Context, config: Config) {
       }
 
       // get user translation input
-      await argv.session.send("please input your translation");
+      await argv.session.send("请输入翻译内容");
       translation = segment.unescape(await argv.session.prompt());
       LOGGER.debug(`received user translation ${translation}`);
 

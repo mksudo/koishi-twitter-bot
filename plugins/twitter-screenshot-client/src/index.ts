@@ -4,7 +4,7 @@ import puppeteer, { Browser, Page, Viewport } from "puppeteer-core";
 import { retryDecorator } from "ts-retry-promise";
 import { IUserConfig } from "koishi-plugin-mongo-database";
 import { IScreenshotResult, ITweet, ITweetComponent, ITweetEntity, IScreenshotPageResult } from './model';
-import { err, getRandomDelay, MajorTranslationBlock, ok, parseMajorTranslationlock, waitForTime } from './utils';
+import { err, getRandomDelay, MajorTranslationBlock, ok, parseMajorTranslationBlock, waitForTime } from './utils';
 
 export * from "./model";
 
@@ -491,7 +491,7 @@ class TwitterScreenshotClient extends Service {
    */
   async translate(page: Page, text: string, userConfig: IUserConfig) {
     LOGGER.debug("translation procedure starts");
-    const parsedTranslation = parseMajorTranslationlock(text);
+    const parsedTranslation = parseMajorTranslationBlock(text);
     LOGGER.debug(`translation block list: ${JSON.stringify(parsedTranslation)}`);
     const loadCustomContentPromises: Promise<string>[] = [];
 
