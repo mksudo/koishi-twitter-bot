@@ -332,20 +332,6 @@ class TwitterScreenshotClient extends Service {
             const quotedTweet = extendedField.querySelector("div[role=link][tabindex]");
             const card = extendedField.matches(`div[data-testid="card.wrapper"]`) && extendedField || extendedField.querySelector(`div[data-testid="card.wrapper"]`);
 
-            for (const photo of photoList) {
-              result.push({
-                type: "photo",
-                url: photo.querySelector("img")?.src || "",
-              });
-            }
-
-            if (video) {
-              result.push({
-                type: "video",
-                posterUrl: video.querySelector("video")?.poster || "",
-              });
-            }
-
             if (quotedTweet) {
               result.push({
                 type: "tweet",
@@ -356,9 +342,12 @@ class TwitterScreenshotClient extends Service {
                   ),
                 }
               });
-            }
-
-            if (card) {
+            } else if (video) {
+              result.push({
+                type: "video",
+                posterUrl: video.querySelector("video")?.poster || "",
+              });
+            } else if (card) {
               // polls are also wrapped in a card
               const isPoll = card.querySelector("div[data-testid=cardPoll]") !== null;
               if (isPoll) {
@@ -390,6 +379,13 @@ class TwitterScreenshotClient extends Service {
                     url: media.querySelector("img")?.src || "",
                   },
                   detail: parseComponentField(detail.children[card.children.length - 1]?.children[0])
+                });
+              }
+            } else if (photoList.length) {
+              for (const photo of photoList) {
+                result.push({
+                  type: "photo",
+                  url: photo.querySelector("img")?.src || "",
                 });
               }
             }

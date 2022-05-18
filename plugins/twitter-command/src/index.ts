@@ -10,6 +10,7 @@ import { alphanumeric } from "nanoid-dictionary";
 import { parseScreenshotResultToSegments, saveToFile } from './utils';
 
 export const name = 'twitterCommand';
+const commandTerminator = ".abort";
 
 const LOGGER = new Logger(name);
 LOGGER.level = 3;
@@ -224,12 +225,13 @@ export function apply(ctx: Context, config: Config) {
       await argv.session.send("请输入翻译内容");
       translation = segment.unescape(await argv.session.prompt());
       LOGGER.debug(`received user translation ${translation}`);
+      if (translation == commandTerminator) return "命令终止";
 
       // add translation and take screenshot
       LOGGER.debug(`start taking screenshot ...`);
       const gotoResult = await ctx.twitterScreenshotClient.goto(url);
       if (gotoResult.state == false) return gotoResult.content;
-      await ctx.twitterScreenshotClient.translate(gotoResult.content, translation, userConfig);
+      await ctx.twitterScreenshotClient.translate(gotoResult.content, translation, userConfig).catch(err => LOGGER.warn(err));
       const screenshotResult = await ctx.twitterScreenshotClient.screenshot(gotoResult.content);
       if (screenshotResult.state == false) return screenshotResult.content;
 
@@ -270,21 +272,25 @@ export function apply(ctx: Context, config: Config) {
           continue;
         }
         if (contentKeyList.length) {
-          let content = "";
+          const content: string[] = [];
           for (const key of contentKeyList) {
+            if (!userConfig[key]) {
+              content.push(`设置${key}不存在`);
+              continue;
+            }
             switch (key) {
               case "background":
               case "tag":
                 const imageContent = await fs.promises.readFile(userConfig[key], { encoding: "base64" });
-                content += `${key}: ${segment("image", { url: `base64://${imageContent}`})}`;
+                content.push(`${key}: ${segment("image", { url: `base64://${imageContent}`})}`);
                 break;
               case "css":
                 const fileContent = await fs.promises.readFile(userConfig[key], { encoding: "utf-8" });
-                content += `${key}: ${fileContent}`;
+                content.push(`${key}: ${fileContent}`);
                 break;
             }
           }
-          msgList.push(`${userConfig.username}: ${content}`);
+          msgList.push(`${userConfig.username}: ${content.join("\n")}`);
         } else {
           for (const key of CustomizableUserConfigKeys) delete userConfig[key];
           msgList.push(`${userConfig.username}: ${JSON.stringify(userConfig)}`);
@@ -329,7 +335,9 @@ export function apply(ctx: Context, config: Config) {
             await argv.session.sendQueued(`默认css模板为：\n${defaultCSSTemplate}`);
           }
           await argv.session.sendQueued(`请输入设置${key}的内容`);
-          const result = segment.parse(await argv.session.prompt());
+          const rawCustomContent = await argv.session.prompt();
+          if (rawCustomContent == commandTerminator) return "命令终止";
+          const result = segment.parse(rawCustomContent);
           if (result.length != 1) return `为设置${key}提供的参数数量错误，需求1，当前为${result.length}`;
           const content = result[0];
 
