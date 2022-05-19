@@ -232,6 +232,7 @@ export function apply(ctx: Context, config: Config) {
       const gotoResult = await ctx.twitterScreenshotClient.goto(url);
       if (gotoResult.state == false) return gotoResult.content;
       await ctx.twitterScreenshotClient.translate(gotoResult.content, translation, userConfig).catch(err => LOGGER.warn(err));
+      await new Promise(resolve => setTimeout(resolve, 1000));
       const screenshotResult = await ctx.twitterScreenshotClient.screenshot(gotoResult.content);
       if (screenshotResult.state == false) return screenshotResult.content;
 
