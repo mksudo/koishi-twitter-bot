@@ -2,9 +2,10 @@ import fs from "fs";
 import twemoji from "twemoji";
 import fetch from "node-fetch";
 import { segment } from "koishi";
-import { IScreenshotResult, ITweet, ITweetComponent } from "koishi-plugin-twitter-screenshot-client";
+import { IScreenshotResult, ITweet, ITweetComponent, ITweetEntity } from "koishi-plugin-twitter-screenshot-client";
 import { IUserConfig } from "koishi-plugin-mongo-database";
 import BaiduTranslationClient from "koishi-plugin-baidu-translate";
+import { IParsedNode } from "./model";
 
 
 export const NOOP = () => { };
@@ -36,112 +37,111 @@ export async function saveToFile(content: segment.Parsed, path: string) {
   }
 }
 
-
-/**
- * Parse tweet components to string
- * @param components components to be parsed to string
- * @returns parsed result as string
- */
-function parseTweetComponentList(components: ITweetComponent[]) {
-  let result = "";
-  for (const component of components) {
-    switch (component.type) {
-      case "emoji":
-        result += segment("text", { content: twemoji.convert.fromCodePoint(component.content) });
-        break;
-      default:
-        result += segment("text", { content: component.content });
-        break;
-    }
-  }
-
-  return result;
+function parseTweetComponent(tweetComponent: ITweetComponent): IParsedNode {
+  if (tweetComponent.type == "emoji")
+    return { needTranslation: false, content: segment("text", { content: twemoji.convert.fromCodePoint(tweetComponent.content) }) };
+  return { needTranslation: true, content: segment("text", { content: tweetComponent.content }) };
 }
 
+function parseTweetEntity(tweetComponent: ITweetEntity): IParsedNode {
+  const node: IParsedNode = { needTranslation: false, content: [] };
+  // tweet type entity should not be passed to this function
+  switch (tweetComponent.type) {
+    case "photo":
+      (node.content as IParsedNode[]).push({ needTranslation: false, content: segment("text", { content: "PHOTO: \n" }) });
+      (node.content as IParsedNode[]).push({ needTranslation: false, content: segment("image", { url: tweetComponent.url }) });
+      return node;
+    case "video":
+      (node.content as IParsedNode[]).push({ needTranslation: false, content: segment("text", { content: "VIDEO: \n" }) });
+      (node.content as IParsedNode[]).push({ needTranslation: false, content: segment("image", { url: tweetComponent.posterUrl }) });
+      return node;
+    case "poll":
+      (node.content as IParsedNode[]).push({ needTranslation: true, content: segment("text", { content: "POLL: \n" }) });
+      tweetComponent.choices.forEach((choice, index) => {
+        (node.content as IParsedNode[]).push({ needTranslation: true, content: `${index}: `});
+        (node.content as IParsedNode[]).push({ needTranslation: true, content: choice.map(component => parseTweetComponent(component)) });
+        if (index != tweetComponent.choices.length - 1) (node.content as IParsedNode[]).push({ needTranslation: true, content: "\n" });
+      });
+      node.needTranslation = true;
+      return node;
+    case "card":
+      (node.content as IParsedNode[]).push({ needTranslation: true, content: segment("text", { content: "CARD: \n" }) });
+      (node.content as IParsedNode[]).push({ needTranslation: false, content: segment("text", { content: `LINK: ${tweetComponent.link}` }) });
+      (node.content as IParsedNode[]).push({ needTranslation: false, content: segment("text", { content: "MEDIA: \n" }) });
+      (node.content as IParsedNode[]).push({ needTranslation: false, content: segment("image", { url: tweetComponent.media.url }) });
+      (node.content as IParsedNode[]).push({ needTranslation: true, content: segment("text", { content: "DETAIL: \n" }) });
+      (node.content as IParsedNode[]).push({ needTranslation: true, content: tweetComponent.detail.map(component => parseTweetComponent(component)) });
+      node.needTranslation = true;
+      return node;
+  }
+}
 
-/**
- * Parse given tweet to string
- * @param tweet tweet to be parsed to string
- * @param userConfig current user config
- * @returns parsed string
- */
-async function parseTweetToSegments(tweet: ITweet, isMainTweet: boolean, userConfig: IUserConfig, translator: BaiduTranslationClient): Promise<string> {
-  const result: string[] = [];
+function parseTweet(tweet: ITweet, userConfig: IUserConfig, index?: number) {
+  const node: IParsedNode = { needTranslation: false, content: [] };
+
+  if (index != undefined) (node.content as IParsedNode[]).push({ needTranslation: true, content: `${index + 1}: \n` });
 
   if (userConfig.text) {
-    const text = parseTweetComponentList(tweet.elements);
-    result.push(text);
-    if (userConfig.translation && isMainTweet) {
-      const translateResult = await translator.translate(text);
-      result.push(segment("text", { content: "[TRANSLATION]\n" }) + translateResult.content);
-    }
+    (node.content as IParsedNode[]).push({ needTranslation: true, content: tweet.elements.map(component => parseTweetComponent(component)) });
+    (node.content as IParsedNode[]).push({ needTranslation: true, content: "\n" });
+    node.needTranslation = true;
   }
-
   if (userConfig.extended && tweet.entities) {
-    for (const element of tweet.entities) {
-      let currentBlock: string;
-      switch (element.type) {
-        case "photo":
-          currentBlock = segment("text", { content: "[PHOTO]\n" });
-          currentBlock += segment("image", { url: element.url });
-          result.push(currentBlock);
-          break;
-        case "video":
-          currentBlock = segment("text", { content: "[VIDEO]\n" });
-          currentBlock += segment("image", { url: element.posterUrl });
-          result.push(currentBlock);
-          break;
-        case "poll":
-          currentBlock = segment("text", { content: "[POLL]\n" });
-          currentBlock += segment("text", {
-            content: element.choices
-              .map((choice, index) => `[${index}]: ${parseTweetComponentList(choice)}`)
-              .join("\n"),
-          });
-          result.push(currentBlock);
-          break;
-        case "card":
-          currentBlock = segment("text", { content: "[CARD]\n" });
-          currentBlock += segment("text", { content: `[LINK] ${element.link}\n` });
-          currentBlock += segment("text", { content: "[MEDIA]\n" }) +
-            segment("image", { url: element.media.url }) +
-            segment("text", { content: "\n" });
-          currentBlock += segment("text", { content: `[DETAIL]\n` }) +
-            segment("text", { content: parseTweetComponentList(element.detail) });
-          result.push(currentBlock);
-          break;
-        case "tweet":
-          currentBlock = segment("text", { content: "[TWEET]\n" });
-          currentBlock = await parseTweetToSegments(element.tweet, isMainTweet, userConfig, translator);
-          result.push(currentBlock);
-          break;
+    tweet.entities.forEach((entity, index) => {
+      if (entity.type == "tweet") {
+        (node.content as IParsedNode[]).push({ needTranslation: true, content: segment("text", { content: "TWEET: \n" }) });
+        (node.content as IParsedNode[]).push(parseTweet(entity.tweet, userConfig));
       }
-    }
+      else (node.content as IParsedNode[]).push(parseTweetEntity(entity));
+      if (index != tweet.entities.length - 1) (node.content as IParsedNode[]).push({ needTranslation: true, content: "\n" });
+    });
+    node.needTranslation = true;
   }
-
-  return result.join("\n");
+  return node;
 }
 
-/**
- * Parse the given screenshot result to string
- * @param screenshotResult screenshot result of current page
- * @param userConfig current user config
- * @returns parsed string of screenshot result
- */
-export async function parseScreenshotResultToSegments(screenshotResult: IScreenshotResult, userConfig: IUserConfig, translator: BaiduTranslationClient) {
-  let result: string = "";
+function getTranslationText(node: IParsedNode): string {
+  if (node.needTranslation) {
+    if (typeof node.content == "object")
+      return node.content.map(node => getTranslationText(node)).join("");
+    return node.content;
+  }
+}
+
+export function getParsedText(node: IParsedNode): string {
+  if (typeof node.content == "object")
+    return node.content.map(node => getParsedText(node)).join("");
+  return node.content;
+}
+
+export async function parseScreenshotResult(screenshotResult: IScreenshotResult, userConfig: IUserConfig, translator: BaiduTranslationClient) {
+  const node: IParsedNode = { needTranslation: false, content: [] };
 
   if (userConfig.screenshot) {
-    result = segment("image", { url: `base64://${screenshotResult.screenshotBase64}` });
+    (node.content as IParsedNode[]).push({ needTranslation: false, content: segment("image", { url: `base64://${screenshotResult.screenshotBase64}` }) });
+    (node.content as IParsedNode[]).push({ needTranslation: false, content: "\n" });
   }
 
   if (screenshotResult.tweetList.length == 1) {
-    return result + await parseTweetToSegments(screenshotResult.tweetList[0], true, userConfig, translator);
+    (node.content as IParsedNode[]).push(parseTweet(screenshotResult.tweetList[0], userConfig));
+    (node.content as IParsedNode[]).push({ needTranslation: false, content: "\n" });
+    node.needTranslation = true;
   } else {
-    const textList = await Promise.all(
-      screenshotResult.tweetList
-        .map(async (tweet, index) => `[${index + 1}]: ${await parseTweetToSegments(tweet, index == screenshotResult.tweetList.length - 1, userConfig, translator)}`)
-    );
-    return result + textList.join("\n");
+    screenshotResult.tweetList.forEach((tweet, index) => {
+      (node.content as IParsedNode[]).push(parseTweet(tweet, userConfig, index));
+      (node.content as IParsedNode[]).push({ needTranslation: true, content: "\n" });
+    })
+    node.needTranslation = true;
   }
+
+  if (userConfig.translation) {
+    const translationText = getTranslationText(node);
+    if (translationText.trim()) {
+      const translateResult = await translator.translate(translationText);
+      (node.content as IParsedNode[]).push({ needTranslation: false, content: "TRANSLATION: \n" });
+      (node.content as IParsedNode[]).push({ needTranslation: false, content: translateResult.content });
+    }
+  }
+
+  return node;
 }

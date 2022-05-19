@@ -7,7 +7,7 @@ import TwitterScreenshotClient, { name as twitterScreenshotClientName } from "ko
 import { ETwitterStreamEvent, TweetV2SingleResult } from 'twitter-api-v2';
 import { customAlphabet } from "nanoid/async";
 import { alphanumeric } from "nanoid-dictionary";
-import { parseScreenshotResultToSegments, saveToFile } from './utils';
+import { getParsedText, parseScreenshotResult, saveToFile } from './utils';
 
 export const name = 'twitterCommand';
 const commandTerminator = ".abort";
@@ -85,7 +85,8 @@ export function apply(ctx: Context, config: Config) {
 
       for (const groupConfig of subscribedList) {
         const userConfig = groupConfig.userConfigMap[tweet.data.author_id];
-        const msg = await parseScreenshotResultToSegments(screenshotResult.content, userConfig, ctx.baiduTranslate);
+        const parsedNode = await parseScreenshotResult(screenshotResult.content, userConfig, ctx.baiduTranslate);
+        const msg = getParsedText(parsedNode);
         const historyIndex = await ctx.mongoDatabase.addHistory(groupConfig.guildId, `${username}/status/${tweet.data.id}`);
         await bot.sendMessage(groupConfig.guildId, msg + `\n[INDEX]: ${historyIndex}`).catch(() => LOGGER.warn("send message error"));
       }
@@ -151,12 +152,13 @@ export function apply(ctx: Context, config: Config) {
 
       const gotoResult = await ctx.twitterScreenshotClient.goto(url);
       if (gotoResult.state == false) return gotoResult.content;
+      await new Promise(resolve => setTimeout(resolve, 1000));
       const screenshotResult = await ctx.twitterScreenshotClient.screenshot(gotoResult.content);
       if (screenshotResult.state == false) return screenshotResult.content;
 
-      const msg = await parseScreenshotResultToSegments(screenshotResult.content, makeUserConfig("", ""), ctx.baiduTranslate);
+      const parsedNode = await parseScreenshotResult(screenshotResult.content, makeUserConfig("", ""), ctx.baiduTranslate);
 
-      return msg;
+      return getParsedText(parsedNode);
     });
 
   groupCtx.command("announce <content: text>", { hidden: true })

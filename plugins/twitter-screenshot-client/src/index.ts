@@ -17,6 +17,7 @@ declare module "koishi" {
 }
 
 export const name = 'twitterScreenshotClient';
+const USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.67 Safari/537.36";
 
 const LOGGER = new Logger(name);
 LOGGER.level = 3;
@@ -56,11 +57,15 @@ class TwitterScreenshotClient extends Service {
    */
   async getPage() {
     try {
-      return await this.client.newPage();
+      const page = await this.client.newPage();
+      await page.setUserAgent(USER_AGENT);
+      return page;
     } catch {
       await this.client?.close().catch(LOGGER.warn);
       await this.start();
-      return await this.client.newPage();
+      const page = await this.client.newPage();
+      await page.setUserAgent(USER_AGENT);
+      return page;
     }
   }
 
