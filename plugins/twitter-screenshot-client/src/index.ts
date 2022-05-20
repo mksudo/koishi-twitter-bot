@@ -141,7 +141,7 @@ class TwitterScreenshotClient extends Service {
 
     const usernameInput = await page.$("input");
     await usernameInput.type(this.config.twitterUserName, { delay: getRandomDelay(100, 300) });
-    await waitForTime(getRandomDelay(1000, 2000));
+    await page.waitForTimeout(getRandomDelay(1000, 2000));
 
     LOGGER.debug("end typing user name");
 
@@ -153,7 +153,7 @@ class TwitterScreenshotClient extends Service {
 
     const passwordInput = (await page.$$("input"))[1];
     await passwordInput.type(this.config.twitterPassword, { delay: getRandomDelay(100, 300) });
-    await waitForTime(getRandomDelay(1000, 2000));
+    await page.waitForTimeout(getRandomDelay(1000, 2000));
 
     LOGGER.debug("end typing user password");
 
@@ -169,7 +169,7 @@ class TwitterScreenshotClient extends Service {
       LOGGER.debug("verification required, start typing phone number");
 
       await verificationInput.type(this.config.twitterPhoneNumber, { delay: getRandomDelay(100, 300) });
-      await waitForTime(getRandomDelay(1000, 2000));
+      await page.waitForTimeout(getRandomDelay(1000, 2000));
 
       LOGGER.debug("end typing phone number");
 
@@ -245,12 +245,12 @@ class TwitterScreenshotClient extends Service {
       }
 
       await this.setViewPort(page);
-      await waitForTime(1000);
+      await page.waitForTimeout(1000);
 
       LOGGER.debug("start expanding content");
       await this.expandCollapsedContent(page);
       LOGGER.debug("end expanding content");
-      await waitForTime(1000);
+      await page.waitForTimeout(1000);
 
       LOGGER.debug("start waiting for image");
       await this.waitForImageLoading(page);
