@@ -40,7 +40,7 @@ class TwitterScreenshotClient extends Service {
     this.client = await puppeteer.launch({
       product: "chrome",
       executablePath: this.config.executablePath || require("chrome-finder")(),
-      headless: true,
+      headless: false,
       args: ["--no-sandbox", "--disable-setuid-sandbox"],
     });
     LOGGER.debug(`puppteer client successfully started`);
@@ -187,23 +187,14 @@ class TwitterScreenshotClient extends Service {
    * @param page the page to wait for loading
    */
   protected async waitForImageLoading(page: Page) {
-    const retryWaitForImageLoading = retryDecorator(async () => {
-      let loaded = false;
-      const imageList = await page.$$("img");
+    const retryWaitForImageLoading = retryDecorator<boolean, any>(page.evaluate.bind(page), { retries: "INFINITELY", delay: 1000, until: (result) => result });
 
-      for (const image of imageList) {
-        const completeAttribute = await image.getProperty("complete");
-        loaded = await completeAttribute.jsonValue<boolean>();
-        if (!loaded) break;
+    return retryWaitForImageLoading(() => {
+      for (const imgElement of document.querySelectorAll("img")) {
+        if (!imgElement?.complete) return false;
       }
-
-      if (!loaded) throw new Error("images are still loading");
-    }, {
-      retries: 5,
-      delay: 1000,
-    });
-
-    await retryWaitForImageLoading().catch(LOGGER.warn);
+      return true;
+    }).catch(LOGGER.warn);
   }
 
   /**
