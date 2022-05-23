@@ -40,7 +40,7 @@ class TwitterScreenshotClient extends Service {
     this.client = await puppeteer.launch({
       product: "chrome",
       executablePath: this.config.executablePath || require("chrome-finder")(),
-      headless: false,
+      headless: true,
       args: ["--no-sandbox", "--disable-setuid-sandbox"],
     });
     LOGGER.debug(`puppteer client successfully started`);
@@ -470,6 +470,7 @@ class TwitterScreenshotClient extends Service {
       }
       return ok(result);
     } catch (error) {
+      await page.close().catch(LOGGER.warn);
       this.occupied = false;
       return err(`${error}`);
     }
