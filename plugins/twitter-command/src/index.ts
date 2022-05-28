@@ -15,7 +15,7 @@ const commandTerminator = ".abort";
 const LOGGER = new Logger(name);
 LOGGER.level = 3;
 
-// export const using = [baiduTranslateName, mongoDatabaseName, twitterApiClientName, twitterScreenshotClientName] as const;
+export const using = [baiduTranslateName, mongoDatabaseName, twitterApiClientName, twitterScreenshotClientName] as const;
 
 export interface Config {
   botId: string,
