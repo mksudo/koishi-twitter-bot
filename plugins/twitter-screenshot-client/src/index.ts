@@ -719,7 +719,7 @@ class TwitterScreenshotClient extends Service {
     // the page is still trying to resolve the new height
     // therefore we add another 1 second wait to ensure that
     // the height is properly resolved
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(5000);
 
     LOGGER.debug("translation procedure ends");
   }
