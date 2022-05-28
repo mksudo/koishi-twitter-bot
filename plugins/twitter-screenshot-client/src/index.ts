@@ -19,7 +19,7 @@ declare module "koishi" {
 export const name = 'twitterScreenshotClient';
 const USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.67 Safari/537.36";
 const DEFAULT_VIEWPORT: Viewport = { width: 1080, height: 3000 };
-const HEADLESS = false;
+const HEADLESS = true;
 
 const LOGGER = new Logger(name);
 LOGGER.level = 3;
@@ -459,10 +459,7 @@ class TwitterScreenshotClient extends Service {
           }
           return result;
         }
-      ))
-
-      // weird x coordinate difference between headless browser and normal browser
-      // if (!HEADLESS) pageResult.options.clip.x += 10;
+      ));
 
       LOGGER.debug("acquire page lock");
       await this.occupy();
