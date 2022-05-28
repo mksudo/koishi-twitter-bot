@@ -710,6 +710,13 @@ class TwitterScreenshotClient extends Service {
 
     }, parsedTranslation, { userCSS, userTag, userBackground });
 
+    // although we waited above for every added translation block
+    // it is possible that while all blocks are loaded
+    // the page is still trying to resolve the new height
+    // therefore we add another 1 second wait to ensure that
+    // the height is properly resolved
+    await page.waitForTimeout(1000);
+
     LOGGER.debug("translation procedure ends");
   }
 }
