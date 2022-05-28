@@ -462,7 +462,7 @@ class TwitterScreenshotClient extends Service {
       ))
 
       // weird x coordinate difference between headless browser and normal browser
-      if (!HEADLESS) pageResult.options.clip.x += 10;
+      // if (!HEADLESS) pageResult.options.clip.x += 10;
 
       LOGGER.debug("acquire page lock");
       await this.occupy();
