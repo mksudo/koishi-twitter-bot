@@ -76,6 +76,7 @@ export function apply(ctx: Context, config: Config) {
       }
 
       const screenshotResult = await ctx.twitterScreenshotClient.screenshot(gotoResult.content);
+      await gotoResult.content.close().catch(LOGGER.warn);
       if (screenshotResult.state == false) {
         for (const groupConfig of subscribedList) {
           await bot.sendMessage(groupConfig.guildId, screenshotResult.content).catch(() => LOGGER.warn("send message error"));
@@ -154,6 +155,7 @@ export function apply(ctx: Context, config: Config) {
       if (gotoResult.state == false) return gotoResult.content;
       await new Promise(resolve => setTimeout(resolve, 1000));
       const screenshotResult = await ctx.twitterScreenshotClient.screenshot(gotoResult.content);
+      await gotoResult.content.close().catch(LOGGER.warn);
       if (screenshotResult.state == false) return screenshotResult.content;
 
       const parsedNode = await parseScreenshotResult(screenshotResult.content, makeUserConfig("", ""), ctx.baiduTranslate);
@@ -233,9 +235,9 @@ export function apply(ctx: Context, config: Config) {
       LOGGER.debug(`start taking screenshot ...`);
       const gotoResult = await ctx.twitterScreenshotClient.goto(url);
       if (gotoResult.state == false) return gotoResult.content;
-      await ctx.twitterScreenshotClient.translate(gotoResult.content, translation, userConfig).catch(err => LOGGER.warn(err));
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await ctx.twitterScreenshotClient.translate(gotoResult.content, translation, userConfig).catch(LOGGER.warn);
       const screenshotResult = await ctx.twitterScreenshotClient.screenshot(gotoResult.content);
+      // await gotoResult.content.close().catch(LOGGER.warn);
       if (screenshotResult.state == false) return screenshotResult.content;
 
       LOGGER.debug(`take screenshot completed`);

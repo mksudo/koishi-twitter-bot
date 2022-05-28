@@ -460,18 +460,20 @@ class TwitterScreenshotClient extends Service {
 
       LOGGER.debug("start puppeteer screenshot");
       const screenshotBase64 = await page.screenshot(pageResult.options) as string;
+
+      LOGGER.debug("screenshot ends, success");
       this.occupied = false;
 
-      LOGGER.debug("close current page, screenshot procedure ends and frees all resources");
-      await page.close();
       const result: IScreenshotResult = {
         screenshotBase64,
         tweetList: pageResult.tweetList,
       }
       return ok(result);
     } catch (error) {
-      await page.close().catch(LOGGER.warn);
+
+      LOGGER.warn(`screenshot error, error: ${error}`);
       this.occupied = false;
+
       return err(`${error}`);
     }
   }
@@ -552,6 +554,18 @@ class TwitterScreenshotClient extends Service {
           for (const child of translationBlock.children) element.appendChild(child);
         else
           element.parentElement.appendChild(translationBlock);
+
+        const updateObserver = new MutationObserver((mutation, observer) => {
+          const translationBlock = element.querySelector(".translation");
+          if (translationBlock) {
+            console.log(translationBlock);
+            observer.disconnect();
+            return;
+          }
+        });
+
+        updateObserver.observe(element, { childList: true, subtree: true });
+
         return translationBlock
       };
 
@@ -684,6 +698,9 @@ class TwitterScreenshotClient extends Service {
       if (customized.userBackground) addBackground();
 
     }, parsedTranslation, { userCSS, userTag, userBackground });
+
+    await page.waitForTimeout(1000);
+
     LOGGER.debug("translation procedure ends");
   }
 }
