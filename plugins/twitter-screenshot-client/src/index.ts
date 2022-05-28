@@ -44,7 +44,7 @@ class TwitterScreenshotClient extends Service {
       executablePath: this.config.executablePath || require("chrome-finder")(),
       headless: HEADLESS,
       defaultViewport: null,
-      args: ["--hide-scrollbars"],
+      args: ["--no-sandbox", "--disable-setuid-sandbox", "--hide-scrollbars"],
     });
     LOGGER.debug(`puppteer client successfully started`);
   }
@@ -716,9 +716,9 @@ class TwitterScreenshotClient extends Service {
     // although we waited above for every added translation block
     // it is possible that while all blocks are loaded
     // the page is still trying to resolve the new height
-    // therefore we add another 1 second wait to ensure that
+    // therefore we add another 2 second wait to ensure that
     // the height is properly resolved
-    await page.waitForTimeout(5000);
+    await page.waitForTimeout(2000);
 
     LOGGER.debug("translation procedure ends");
   }
