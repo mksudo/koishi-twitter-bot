@@ -15,7 +15,7 @@ const commandTerminator = ".abort";
 const LOGGER = new Logger(name);
 LOGGER.level = 3;
 
-export const using = [baiduTranslateName, mongoDatabaseName, twitterApiClientName, twitterScreenshotClientName] as const;
+// export const using = [baiduTranslateName, mongoDatabaseName, twitterApiClientName, twitterScreenshotClientName] as const;
 
 export interface Config {
   botId: string,
@@ -237,7 +237,7 @@ export function apply(ctx: Context, config: Config) {
       if (gotoResult.state == false) return gotoResult.content;
       await ctx.twitterScreenshotClient.translate(gotoResult.content, translation, userConfig).catch(LOGGER.warn);
       const screenshotResult = await ctx.twitterScreenshotClient.screenshot(gotoResult.content);
-      // await gotoResult.content.close().catch(LOGGER.warn);
+      await gotoResult.content.close().catch(LOGGER.warn);
       if (screenshotResult.state == false) return screenshotResult.content;
 
       LOGGER.debug(`take screenshot completed`);
