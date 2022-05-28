@@ -43,7 +43,7 @@ class TwitterScreenshotClient extends Service {
       product: "chrome",
       executablePath: this.config.executablePath || require("chrome-finder")(),
       headless: HEADLESS,
-      args: ["--no-sandbox", "--disable-setuid-sandbox", "--hide-scrollbars"],
+      args: ["--hide-scrollbars"],
     });
     LOGGER.debug(`puppteer client successfully started`);
   }
