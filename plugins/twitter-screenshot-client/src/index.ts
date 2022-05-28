@@ -18,6 +18,7 @@ declare module "koishi" {
 
 export const name = 'twitterScreenshotClient';
 const USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.67 Safari/537.36";
+const DEFAULT_VIEWPORT: Viewport = { width: 1080, height: 3000 };
 
 const LOGGER = new Logger(name);
 LOGGER.level = 3;
@@ -59,12 +60,14 @@ class TwitterScreenshotClient extends Service {
     try {
       const page = await this.client.newPage();
       await page.setUserAgent(USER_AGENT);
+      await page.setViewport(DEFAULT_VIEWPORT);
       return page;
     } catch {
       await this.client?.close().catch(LOGGER.warn);
       await this.start();
       const page = await this.client.newPage();
       await page.setUserAgent(USER_AGENT);
+      await page.setViewport(DEFAULT_VIEWPORT);
       return page;
     }
   }
@@ -89,7 +92,7 @@ class TwitterScreenshotClient extends Service {
     const retryGoto = retryDecorator(page.goto.bind(page), { retries: 3, delay: 1000, timeout: "INFINITELY" });
 
     const result: puppeteer.HTTPResponse = await retryGoto(url, {
-      waitUntil: "domcontentloaded",
+      waitUntil: "networkidle2",
     });
 
     if (result.ok()) {
@@ -113,7 +116,10 @@ class TwitterScreenshotClient extends Service {
         width: Math.max(document.body.scrollWidth, document.body.offsetWidth)
       };
     });
-    await page.setViewport(maxViewPort);
+
+    if (maxViewPort.height !== DEFAULT_VIEWPORT.height || maxViewPort.width !== DEFAULT_VIEWPORT.width) {
+      await page.setViewport(maxViewPort);
+    }
   }
 
   /**
@@ -509,11 +515,25 @@ class TwitterScreenshotClient extends Service {
        * @param replace whether we replace everything in the current field or not
        * @returns the element that contains all translation components
        */
-      const addTranslationBlock = (element: Element, translation: ITweetComponent[], replace = false) => {
-        const translationBlock = document.createElement("div");
-        translationBlock.className = "translation";
+      const addTranslationBlock = (element: Element, translation: ITweetComponent[], replace = false): Promise<HTMLDivElement> => {
+        return new Promise(resolve =>{
+          const translationBlock = document.createElement("div");
 
-        for (const block of translation) {
+          const updateObserver = new MutationObserver((mutations, observer) => {
+            mutations.forEach((mutation) => {
+              if (mutation.type === "childList") {
+                updateObserver.disconnect();
+                resolve(translationBlock);
+              }
+            });
+          });
+
+          translationBlock.className = "translation";
+          translationBlock.onload = () => {
+            resolve(translationBlock);
+          }
+
+          for (const block of translation) {
           switch (block.type) {
             case "text":
               const textElement = document.createElement("span");
@@ -548,25 +568,16 @@ class TwitterScreenshotClient extends Service {
               translationBlock.appendChild(hashtagSpanElement);
               break;
           }
-        }
+          }
 
-        if (replace)
-          for (const child of translationBlock.children) element.appendChild(child);
-        else
-          element.parentElement.appendChild(translationBlock);
-
-        const updateObserver = new MutationObserver((mutation, observer) => {
-          const translationBlock = element.querySelector(".translation");
-          if (translationBlock) {
-            console.log(translationBlock);
-            observer.disconnect();
-            return;
+          if (replace) {
+            updateObserver.observe(element, { childList: true, subtree: true });
+            for (const child of translationBlock.children) element.appendChild(child);
+          } else {
+            updateObserver.observe(element.parentElement, { childList: true, subtree: true });
+            element.parentElement.appendChild(translationBlock);
           }
         });
-
-        updateObserver.observe(element, { childList: true, subtree: true });
-
-        return translationBlock
       };
 
       /**
@@ -645,7 +656,7 @@ class TwitterScreenshotClient extends Service {
 
         for (const minorBlock of translationBlock.content) {
           if (minorBlock.type == "main" && componentField) {
-            const translationElement = addTranslationBlock(componentField, minorBlock.content);
+            const translationElement = await addTranslationBlock(componentField, minorBlock.content);
             // only main tweet needs tag
             if (!isCommentTweet && customized.userTag) addTag(translationElement);
           } else if (minorBlock.type == "entity" && hasExtendedField) {
@@ -656,7 +667,7 @@ class TwitterScreenshotClient extends Service {
             if (entity.querySelector("div[role=link][tabindex]")) {
               // quoted tweet
               const componentField = entity.querySelector("div[lang]");
-              if (componentField) addTranslationBlock(componentField, minorBlock.content);
+              if (componentField) await addTranslationBlock(componentField, minorBlock.content);
             } else if (entity.querySelector("div[data-testid='card.wrapper']")) {
               // card, regular card or poll
 
@@ -671,7 +682,7 @@ class TwitterScreenshotClient extends Service {
                     const contentBlock = choices[choiceIndex].querySelector("div[dir=auto]").children[0];
                     while (contentBlock.firstChild) contentBlock.removeChild(contentBlock.firstChild);
 
-                    addTranslationBlock(contentBlock, minorBlock.content, true);
+                    await addTranslationBlock(contentBlock, minorBlock.content, true);
                   }
                 }
               } else {
@@ -684,7 +695,7 @@ class TwitterScreenshotClient extends Service {
                     const contentBlock = cardDescription[descriptionIndex].children[0];
                     while (contentBlock.firstChild) contentBlock.removeChild(contentBlock.firstChild);
 
-                    addTranslationBlock(contentBlock, minorBlock.content, true);
+                    await addTranslationBlock(contentBlock, minorBlock.content, true);
                   }
                 }
               }
@@ -698,8 +709,6 @@ class TwitterScreenshotClient extends Service {
       if (customized.userBackground) addBackground();
 
     }, parsedTranslation, { userCSS, userTag, userBackground });
-
-    await page.waitForTimeout(1000);
 
     LOGGER.debug("translation procedure ends");
   }
