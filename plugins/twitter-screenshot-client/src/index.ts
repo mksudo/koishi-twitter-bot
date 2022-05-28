@@ -43,6 +43,7 @@ class TwitterScreenshotClient extends Service {
       product: "chrome",
       executablePath: this.config.executablePath || require("chrome-finder")(),
       headless: HEADLESS,
+      defaultViewport: null,
       args: ["--hide-scrollbars"],
     });
     LOGGER.debug(`puppteer client successfully started`);
@@ -399,6 +400,7 @@ class TwitterScreenshotClient extends Service {
           const result: IScreenshotPageResult = {
             options: {
               encoding: "base64",
+              captureBeyondViewport: false,
             },
             tweetList: [],
           }
