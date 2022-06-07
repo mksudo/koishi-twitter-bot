@@ -394,7 +394,7 @@ export function apply(ctx: Context, config: Config) {
         const result = argv.options.add ?
           await ctx.mongoDatabase.createUserConfig(argv.session.guildId, user.data.id, user.data.username) :
           await ctx.mongoDatabase.deleteUserConfig(argv.session.guildId, user.data.id, user.data.username);
-        msgList.push(`${username}: ${result.content}`);
+        msgList.push(result.content);
         updated = true;
       }
 
