@@ -1,0 +1,22 @@
+{
+  "name": "koishi-plugin-mongo-database",
+  "description": "custom database specifically designed for this bot",
+  "private": true,
+  "version": "1.0.0",
+  "main": "lib/index.js",
+  "typings": "lib/index.d.ts",
+  "files": [
+    "lib",
+    "dist"
+  ],
+  "license": "MIT",
+  "scripts": {},
+  "keywords": [
+    "chatbot",
+    "koishi",
+    "plugin"
+  ],
+  "peerDependencies": {
+    "koishi": "^4.6.1"
+  }
+}

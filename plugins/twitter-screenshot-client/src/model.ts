@@ -1,6 +1,21 @@
 import { ScreenshotOptions } from "puppeteer-core";
 
 /**
+ * This interface represents a succeed result
+ */
+export interface Ok<T> {
+  state: true,
+  content: T,
+}
+/**
+ * This interface represents a failed result
+ */
+export interface Err<T> {
+  state: false,
+  content: T,
+}
+
+/**
  * Represents the text block on tweet page
  */
 export interface ITweetText {
@@ -28,8 +43,15 @@ export interface ITweetHashtag {
   type: "hashtag",
   content: string,
 }
+/**
+ * Represents the mention user block on tweet page
+ */
+export interface ITweetMention {
+  type: "mention",
+  content: string,
+}
 // all tweet components
-export type ITweetComponent = ITweetText | ITweetEmoji | ITweetLink | ITweetHashtag;
+export type ITweetComponent = ITweetText | ITweetEmoji | ITweetLink | ITweetHashtag | ITweetMention;
 /**
  * Represents the photo entities on tweet page
  */

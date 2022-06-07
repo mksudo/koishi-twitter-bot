@@ -1,6 +1,6 @@
 {
-  "name": "koishi-plugin-twitter",
-  "description": "take screenshot of tweets and send to groups",
+  "name": "koishi-plugin-twitter-screenshot-client",
+  "description": "take screenshot for twitter webpage",
   "private": true,
   "version": "1.0.0",
   "main": "lib/index.js",
