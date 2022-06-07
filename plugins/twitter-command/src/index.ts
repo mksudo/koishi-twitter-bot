@@ -384,6 +384,7 @@ export function apply(ctx: Context, config: Config) {
     })
     .action(async (argv, ...usernameList) => {
       const msgList: string[] = [];
+      let updated = false;
       for (const username of usernameList) {
         const user = await ctx.twitterApiClient.client.userByUsername(username);
         if (user.errors) {
@@ -394,6 +395,14 @@ export function apply(ctx: Context, config: Config) {
           await ctx.mongoDatabase.createUserConfig(argv.session.guildId, user.data.id, user.data.username) :
           await ctx.mongoDatabase.deleteUserConfig(argv.session.guildId, user.data.id, user.data.username);
         msgList.push(`${username}: ${result.content}`);
+        updated = true;
+      }
+
+      if (updated) {
+        const uidList = await ctx.mongoDatabase.getRegisteredUserIdList();
+        LOGGER.debug(`establishing stream with user ids ${JSON.stringify(uidList)}`);
+
+        await ctx.twitterApiClient.updateStreamRule(uidList);
       }
 
       return msgList.join("\n");
