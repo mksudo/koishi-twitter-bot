@@ -1,0 +1,17 @@
+{
+  "files": [],
+  "references": [
+    {
+      "path": "./plugins/twitter-handler"
+    },
+    {
+      "path": "./plugins/twitter-database"
+    },
+    {
+      "path": "./plugins/twitter-core"
+    },
+    {
+      "path": "./plugins/twitter-api"
+    }
+  ]
+}

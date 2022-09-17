@@ -1,0 +1,25 @@
+{
+  "name": "koishi-plugin-twitter-api",
+  "description": "provide twitter api for bot",
+  "private": true,
+  "version": "1.0.0",
+  "main": "lib/index.js",
+  "typings": "lib/index.d.ts",
+  "files": [
+    "lib",
+    "dist"
+  ],
+  "license": "MIT",
+  "scripts": {},
+  "keywords": [
+    "chatbot",
+    "koishi",
+    "plugin"
+  ],
+  "peerDependencies": {
+    "koishi": "^4.9.0"
+  },
+  "dependencies": {
+    "twitter-api-v2": "^1.12.5"
+  }
+}
