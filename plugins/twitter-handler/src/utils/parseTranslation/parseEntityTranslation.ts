@@ -11,6 +11,13 @@ import {
 
 const seperator = /\?([^? ]+) /gm;
 
+/**
+ * Parse the given translation text and extract entity translation blocks from the text
+ *
+ * @param translation the translation text to be parsed
+ *
+ * @returns parsed translation blocks for entities
+ */
 export const parseEntityTranslation = (translation: string) => {
   const matches = [...translation.matchAll(seperator)];
 

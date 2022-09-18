@@ -8,9 +8,18 @@ import { sendRequestForTweetDetail } from "../../utils/sendRequestForTweetDetail
 import { setNotSensitive } from "../../utils/setNotSensitive";
 import { TaskHandler } from "../handler";
 
+/**
+ * This class handles screenshot tasks, take screenshot of the tweet
+ * and extracts tweet data from loading process
+ */
 export class ScreenshotHandler extends TaskHandler {
   protected hasPreHandle: boolean = true;
 
+  /**
+   * Register web page request interceptor, hijack the loading request
+   * to extract tweet data
+   * @param taskContext the shared task context
+   */
   async preHandle(taskContext: ITaskContext) {
     this.preHandleLogger.debug("entered");
 
@@ -90,6 +99,10 @@ export class ScreenshotHandler extends TaskHandler {
     this.preHandleLogger.debug("exited");
   }
 
+  /**
+   * Take screenshot of the tweets
+   * @param taskContext the shared task context
+   */
   async handle(taskContext: ITaskContext) {
     this.handleLogger.debug("entered");
 
@@ -106,6 +119,7 @@ export class ScreenshotHandler extends TaskHandler {
     this.handleLogger.debug("getting clip area");
 
     const clipArea = await taskContext.page.evaluate((count: number) => {
+      // scroll to top-left corner
       window.scrollTo({
         left: -50,
         top: -50,
@@ -136,6 +150,7 @@ export class ScreenshotHandler extends TaskHandler {
 
     this.handleLogger.debug(`clip area is ${JSON.stringify(clipArea)}`);
 
+    // take screenshot as base64 string
     taskContext.screenshotContext.screenshot ??=
       (await taskContext.page.screenshot({
         encoding: "base64",

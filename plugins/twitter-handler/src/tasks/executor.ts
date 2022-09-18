@@ -11,10 +11,22 @@ import { Tasks } from "./tasks";
 const logger = new Logger("TaskExecutor");
 if (process.env.DEBUG) logger.level = 3;
 
+/**
+ * This class executes all registered task series
+ * in a limited concurrency queue, so that the
+ * resource consumption of the project is limited
+ */
 export class TaskExecutor {
+  // the limited concurrecy promise queue
   protected executor: PQueue;
+  // all implemented task handlers
   protected handlers: { [task in Tasks]: TaskHandler };
 
+  /**
+   * Instantiate the promise queue and all task handlers
+   * @param concurrency the concurrency of the promise queue
+   * @param logger the logger
+   */
   constructor(concurrency: number, logger: Logger) {
     this.executor = new PQueue({
       concurrency,
@@ -28,9 +40,18 @@ export class TaskExecutor {
     };
   }
 
+  /**
+   * Register a series of tasks to the promise queue to be executed
+   *
+   * @param taskContext the context to be shared within all the tasks
+   * @param tasks the tasks to be executed, will be executed with respect to the order
+   *
+   * @returns the wrapped promise of the tasks
+   */
   async registerTask(taskContext: ITaskContext, tasks: Tasks[]) {
     return this.executor.add(
       async () => {
+        // call preHandle functions for all tasks
         for (const task of tasks)
           if (this.handlers[task].getHasPreHandle()) {
             await this.handlers[task].preHandle(taskContext).catch((err) => {
@@ -39,6 +60,8 @@ export class TaskExecutor {
             });
             logger.debug(`${task} preHandle accomplished`);
           }
+
+        // call handle functions for all tasks
         for (const task of tasks) {
           await this.handlers[task].handle(taskContext).catch((err) => {
             logger.error(err);
@@ -46,6 +69,8 @@ export class TaskExecutor {
           });
           logger.debug(`${task} handle accomplished`);
         }
+
+        // call postHandle functions for all tasks
         for (const task of tasks)
           if (this.handlers[task].getHasPostHandle()) {
             await this.handlers[task].postHandle(taskContext).catch((err) => {

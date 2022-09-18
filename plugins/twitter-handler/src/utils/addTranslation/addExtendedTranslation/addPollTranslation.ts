@@ -1,6 +1,11 @@
 import { IPollTranslation } from "../../../models/translation/pollTranslation";
 import { TwitterApi } from "../../../models/twitterApi";
 
+/**
+ * Add poll translation to the given tweet
+ * @param tweet the tweet to add poll translation to
+ * @param translation poll translation block
+ */
 export const addPollTranslation = (
   tweet: TwitterApi.Tweet.TweetResult,
   translation: IPollTranslation

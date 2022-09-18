@@ -2,6 +2,10 @@ import { readFile } from "fs/promises";
 import { ITaskContext } from "../../../models/taskContext";
 import { createBase64ImageUrl } from "../../createBase64ImageUrl";
 
+/**
+ * Add tag to the webpage
+ * @param taskContext the shared task context
+ */
 export const addTag = async (taskContext: ITaskContext) => {
   if (!taskContext.translateContext?.customized?.tag) return;
 

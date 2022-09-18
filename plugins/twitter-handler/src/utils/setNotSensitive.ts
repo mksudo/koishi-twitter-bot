@@ -1,5 +1,9 @@
 import { TwitterApi } from "../models/twitterApi";
 
+/**
+ * Set all provided tweets unsensitive
+ * @param tweet all tweets
+ */
 export const setNotSensitive = (
   tweet: TwitterApi.Tweet.TweetResult | TwitterApi.Tweet.TweetTombstone
 ) => {

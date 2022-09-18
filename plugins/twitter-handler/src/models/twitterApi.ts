@@ -1,3 +1,6 @@
+/**
+ * This namespace contains types for tweet loading data
+ */
 export namespace TwitterApi {
   export namespace Entity {
     export interface ColorPalette {

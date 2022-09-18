@@ -10,9 +10,16 @@ import { sendRequestForTweetDetail } from "../../utils/sendRequestForTweetDetail
 import { setNotSensitive } from "../../utils/setNotSensitive";
 import { TaskHandler } from "../handler";
 
+/**
+ * This class handles the translate task, add translation to the tweets
+ */
 export class TranslateHandler extends TaskHandler {
   protected readonly hasPreHandle: boolean = true;
 
+  /**
+   * Hijack the tweet loading process to add translation and extract data
+   * @param taskContext the shared task context
+   */
   async preHandle(taskContext: ITaskContext) {
     this.preHandleLogger.debug("entered");
 
@@ -109,6 +116,10 @@ export class TranslateHandler extends TaskHandler {
     });
   }
 
+  /**
+   * Add customized contents to the web page
+   * @param taskContext the shared task context
+   */
   async handle(taskContext: ITaskContext) {
     this.handleLogger.debug("entered");
 

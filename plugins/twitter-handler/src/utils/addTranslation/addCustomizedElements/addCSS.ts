@@ -1,6 +1,10 @@
 import { readFile } from "fs/promises";
 import { ITaskContext } from "../../../models/taskContext";
 
+/**
+ * Add CSS to the webpage
+ * @param taskContext the shared task context
+ */
 export const addCSS = async (taskContext: ITaskContext) => {
   if (!taskContext.translateContext?.customized?.css) return;
 

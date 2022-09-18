@@ -1,6 +1,10 @@
 import twitterText from "twitter-text";
 import { TwitterApi } from "../../../models/twitterApi";
 
+/**
+ * Parse the new full text for new user mentions
+ * @param tweet the tweet to be parsed
+ */
 export const parseMentions = (tweet: TwitterApi.Tweet.TweetResult) => {
   const nextMentions = twitterText
     .extractMentionsWithIndices(tweet.legacy.full_text)

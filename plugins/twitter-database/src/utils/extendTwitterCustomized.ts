@@ -1,5 +1,9 @@
 import { Context } from "koishi";
 
+/**
+ * Extend koishi database for customized contents
+ * @param ctx the context of koishijs
+ */
 export const extendTwitterCustomized = (ctx: Context) => {
   ctx.database.extend(
     "twitterCustomized",

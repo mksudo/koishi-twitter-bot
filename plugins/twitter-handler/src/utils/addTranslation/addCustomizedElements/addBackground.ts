@@ -2,6 +2,10 @@ import { readFile } from "fs/promises";
 import { ITaskContext } from "../../../models/taskContext";
 import { createBase64ImageUrl } from "../../createBase64ImageUrl";
 
+/**
+ * Add background to the webpage
+ * @param taskContext the shared task context
+ */
 export const addBackground = async (taskContext: ITaskContext) => {
   if (!taskContext.translateContext?.customized?.background) return;
 

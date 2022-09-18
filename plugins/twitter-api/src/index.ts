@@ -24,6 +24,11 @@ export const using = [twitterDatabaseName] as const;
 
 const logger = new Logger(name);
 
+/**
+ * This class handles the twitter api connections for the whole project,
+ * as a service, it will be injected into koishijs context
+ * on startup
+ */
 class TwitterApi extends Service {
   protected twitterApi: TwitterApiProvider;
   protected twitterStream: TweetStream<TweetV2SingleStreamResult>;
@@ -31,9 +36,13 @@ class TwitterApi extends Service {
   constructor(ctx: Context, config: TwitterApi.Config) {
     super(ctx, name);
 
+    // initialize the twitter api
     this.twitterApi = new TwitterApiProvider(config.bearerToken);
   }
 
+  /**
+   * This method is called when the service is starting
+   */
   protected async start() {
     logger.debug("service starting");
 
@@ -57,15 +66,24 @@ class TwitterApi extends Service {
     logger.debug("service started, stream initialized");
   }
 
+  /**
+   * This method is called when the service is stopping
+   */
   protected async stop() {
     logger.debug("service stopping");
 
+    // close the stream if it is not already closed
     this.twitterStream?.close();
     this.twitterStream = undefined;
 
     logger.debug("service stopped");
   }
 
+  /**
+   * Update the twitter official api stream rules
+   * see https://developer.twitter.com/en/docs/twitter-api/tweets/filtered-stream/integrate/build-a-rule
+   * @param users all registered twitter users
+   */
   async updateStreamRules(users: ITwitterUser[]) {
     const userIdRules = users.map((user) => `from:${user.id}`);
     const rules = [];
@@ -105,16 +123,32 @@ class TwitterApi extends Service {
     await this.twitterApi.v2.updateStreamRules({ add: rules });
   }
 
+  /**
+   * Find twitter user info based on input id or name
+   *
+   * @param id twitter user id
+   * @param name twitter user screen name
+   *
+   * @returns the twitter user found, undefined if none exists
+   */
   async selectUser(id?: string, name?: string) {
     if (id) return await this.twitterApi.v2.user(id);
     else if (name) return await this.twitterApi.v2.userByUsername(name);
     else return undefined;
   }
 
+  /**
+   * Get current active twitter stream
+   * @returns the active twitter stream
+   */
   getTwitterStream() {
     return this.twitterStream;
   }
 
+  /**
+   * Get current established twitter api
+   * @returns the established twitter api
+   */
   getTwitterApi() {
     return this.twitterApi;
   }

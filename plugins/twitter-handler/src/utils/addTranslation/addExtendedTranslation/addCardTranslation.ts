@@ -1,6 +1,11 @@
 import { ICardTranslation } from "../../../models/translation/cardTranslation";
 import { TwitterApi } from "../../../models/twitterApi";
 
+/**
+ * Add card translation to the given tweet
+ * @param tweet the tweet to add card translation to
+ * @param translation the card translation block
+ */
 export const addCardTranslation = (
   tweet: TwitterApi.Tweet.TweetResult,
   translation: ICardTranslation

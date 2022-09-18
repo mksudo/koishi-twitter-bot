@@ -1,5 +1,9 @@
 import { Context } from "koishi";
 
+/**
+ * Extend koishi database for twitter user settings
+ * @param ctx the context of koishijs
+ */
 export const extendTwitterUser = (ctx: Context) => {
   ctx.database.extend(
     "twitterUser",

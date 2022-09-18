@@ -3,7 +3,15 @@ import { clickOnElement } from "../../utils/clickOnElement";
 import { typeToElement } from "../../utils/typeToElement";
 import { TaskHandler } from "../handler";
 
+/**
+ * This class handles the login task,
+ * login to twitter webpage if necessary
+ */
 export class LoginHandler extends TaskHandler {
+  /**
+   * Login to twitter if necessary
+   * @param taskContext the shared task context
+   */
   async handle(taskContext: ITaskContext) {
     this.handleLogger.debug("entered");
     // check if current page needs login

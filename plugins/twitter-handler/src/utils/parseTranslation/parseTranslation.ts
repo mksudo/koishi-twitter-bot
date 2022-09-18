@@ -3,6 +3,13 @@ import { parseEntityTranslation } from "./parseEntityTranslation";
 
 const seperator = /!(\d+) /gm;
 
+/**
+ * Parse the translation text to translation blocks
+ *
+ * @param translation the translation text to be parsed
+ *
+ * @returns parsed translation blocks
+ */
 export const parseTranslation = (translation: string): ITranslation[] => {
   const translations: ITranslation[] = [];
   const matches = [...translation.matchAll(seperator)];

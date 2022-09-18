@@ -2,9 +2,16 @@ import pRetry from "p-retry";
 import { ITaskContext } from "../../models/taskContext";
 import { TaskHandler } from "../handler";
 
+/**
+ * This class handles goto task, the web page will be loaded after handle
+ */
 export class GotoHandler extends TaskHandler {
   protected readonly hasPreHandle: boolean = true;
 
+  /**
+   * Set web page interception and user agent for later tasks
+   * @param taskContext the shared task context
+   */
   async preHandle(taskContext: ITaskContext) {
     this.preHandleLogger.debug("entered");
 
@@ -16,6 +23,10 @@ export class GotoHandler extends TaskHandler {
     this.preHandleLogger.debug("exited");
   }
 
+  /**
+   * Try going to the requested url for three times
+   * @param taskContext the shared task context
+   */
   async handle(taskContext: ITaskContext) {
     this.handleLogger.debug("entered");
     // There will be two goto tasks for each task series

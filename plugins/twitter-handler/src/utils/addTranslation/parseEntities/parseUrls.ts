@@ -1,6 +1,10 @@
 import twitterText from "twitter-text";
 import { TwitterApi } from "../../../models/twitterApi";
 
+/**
+ * Parse the new full text for new urls
+ * @param tweet the tweet to be parsed
+ */
 export const parseUrls = (tweet: TwitterApi.Tweet.TweetResult) => {
   const nextUrls = twitterText
     .extractUrlsWithIndices(tweet.legacy.full_text)

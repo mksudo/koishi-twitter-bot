@@ -5,6 +5,11 @@ import { addCardTranslation } from "./addExtendedTranslation/addCardTranslation"
 import { addPollTranslation } from "./addExtendedTranslation/addPollTranslation";
 import { parseEntities } from "./parseEntities/parseEntities";
 
+/**
+ * Add extended entity translation blocks to the given tweet
+ * @param tweet the tweet to add extended translation to
+ * @param translation the translation block to be added
+ */
 const addExtendedTranslation = (
   tweet: TwitterApi.Tweet.TweetResult,
   translation: ITranslation | IQuoteTranslation
@@ -27,6 +32,12 @@ const addExtendedTranslation = (
   }
 };
 
+/**
+ * Add translation to the given tweet
+ * @param tweet the tweet to add translation to
+ * @param translation the translation blocks to be added
+ * @param isMajorTweet whether the current tweet is the major tweet on the webpage
+ */
 export const addTranslation = (
   tweet: TwitterApi.Tweet.TweetResult,
   translation: ITranslation | IQuoteTranslation,

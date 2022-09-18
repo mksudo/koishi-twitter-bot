@@ -21,6 +21,11 @@ export const using = ["puppeteer"];
 const logger = new Logger(name);
 if (process.env.DEBUG) logger.level = 3;
 
+/**
+ * This class handles twitter tasks for the whole project,
+ * as a service, it will be injected into koishijs context
+ * on startup
+ */
 class TwitterHandler extends Service {
   protected taskExecutor: TaskExecutor;
 
@@ -29,6 +34,13 @@ class TwitterHandler extends Service {
     this.taskExecutor = new TaskExecutor(4, logger);
   }
 
+  /**
+   * Register the series of tasks representing a screenshot for the given tweet
+   *
+   * @param url the url of the tweet to get screenshot
+   *
+   * @returns the shared task context after all tasks are handled
+   */
   async screenshot(url: string) {
     const tasks: Tasks[] = ["goto", "login", "goto", "screenshot"];
     const taskContext: ITaskContext = {
@@ -62,6 +74,15 @@ class TwitterHandler extends Service {
     return taskContext;
   }
 
+  /**
+   * Register the series of tasks representing adding translation to the given tweet
+   *
+   * @param url the url of the tweet to translate
+   * @param translation the translation text to be added
+   * @param customized the customized contents to be added
+   *
+   * @returns the shared task context after all tasks are handled
+   */
   async translate(
     url: string,
     translation: string,
