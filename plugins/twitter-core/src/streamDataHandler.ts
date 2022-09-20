@@ -13,9 +13,18 @@ export const registerStreamDataHandler = (
   config: Config,
   locale: string
 ) => {
+  if (ctx.twitterApi.getIsDataHandlerRegistered()) {
+    logger.debug("data handler already registered, skipping");
+    return;
+  }
+
   ctx.twitterApi
     .getTwitterStream()
     .on(ETwitterStreamEvent.Data, async (tweet) => {
+      logger.debug(
+        `bots: ${JSON.stringify(ctx.bots.map((bot) => bot.selfId))}`
+      );
+
       const bot = ctx.bots.find(
         (existingBot) => existingBot.selfId === config.selfId
       );
@@ -81,10 +90,10 @@ export const registerStreamDataHandler = (
           `${name}/status/${tweet.data.id}`
         );
 
-        currText += ctx.i18n.render(
-          "stream_ondata_text_index",
-          [history.index],
-          locale
+        currText += ctx.i18n.text(
+          [locale],
+          ["stream_ondata_text_index"],
+          [history.index]
         );
 
         await bot
@@ -96,4 +105,6 @@ export const registerStreamDataHandler = (
           });
       }
     });
+
+  ctx.twitterApi.setIsDataHandlerRegistered(true);
 };

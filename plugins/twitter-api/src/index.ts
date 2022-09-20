@@ -23,6 +23,7 @@ export const name = "twitterApi";
 export const using = [twitterDatabaseName] as const;
 
 const logger = new Logger(name);
+if (process.env.DEBUG) logger.level = 3;
 
 /**
  * This class handles the twitter api connections for the whole project,
@@ -32,20 +33,44 @@ const logger = new Logger(name);
 class TwitterApi extends Service {
   protected twitterApi: TwitterApiProvider;
   protected twitterStream: TweetStream<TweetV2SingleStreamResult>;
+  protected isDataHandlerRegistered: boolean;
 
   constructor(ctx: Context, config: TwitterApi.Config) {
     super(ctx, name);
 
     // initialize the twitter api
     this.twitterApi = new TwitterApiProvider(config.bearerToken);
+    this.isDataHandlerRegistered = false;
   }
 
   /**
    * This method is called when the service is starting
+   * Do not instantiate the stream here because a 409 error
+   * will be thrown out if thre is no rule present
    */
   protected async start() {
     logger.debug("service starting");
 
+    logger.debug("service started, stream initialized");
+  }
+
+  /**
+   * This method is called when the service is stopping
+   */
+  protected async stop() {
+    logger.debug("service stopping");
+
+    // close the stream if it is not already closed
+    this.twitterStream?.close();
+    this.twitterStream = undefined;
+
+    logger.debug("service stopped");
+  }
+
+  /**
+   * Create a stream
+   */
+  protected async makeStream() {
     this.twitterStream = await this.twitterApi.v2.searchStream({
       "tweet.fields": ["entities", "in_reply_to_user_id", "referenced_tweets"],
       "user.fields": ["id", "username"],
@@ -62,21 +87,6 @@ class TwitterApi extends Service {
         );
       });
     });
-
-    logger.debug("service started, stream initialized");
-  }
-
-  /**
-   * This method is called when the service is stopping
-   */
-  protected async stop() {
-    logger.debug("service stopping");
-
-    // close the stream if it is not already closed
-    this.twitterStream?.close();
-    this.twitterStream = undefined;
-
-    logger.debug("service stopped");
   }
 
   /**
@@ -121,6 +131,10 @@ class TwitterApi extends Service {
     }
 
     await this.twitterApi.v2.updateStreamRules({ add: rules });
+
+    if (this.twitterStream === undefined) {
+      await this.makeStream();
+    }
   }
 
   /**
@@ -151,6 +165,14 @@ class TwitterApi extends Service {
    */
   getTwitterApi() {
     return this.twitterApi;
+  }
+
+  getIsDataHandlerRegistered() {
+    return this.isDataHandlerRegistered;
+  }
+
+  setIsDataHandlerRegistered(isDataHandlerRegistered: boolean) {
+    this.isDataHandlerRegistered = isDataHandlerRegistered;
   }
 }
 

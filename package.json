@@ -18,7 +18,7 @@
     "bump": "yakumo version",
     "dep": "yakumo upgrade",
     "pub": "yakumo publish",
-    "dev": "cross-env NODE_ENV=development koishi start -r esbuild-register -r yml-register --watch",
+    "dev": "cross-env NODE_ENV=development DEBUG=true koishi start -r esbuild-register -r yml-register --watch",
     "start": "koishi start",
     "test": "mocha -r dotenv/config"
   },

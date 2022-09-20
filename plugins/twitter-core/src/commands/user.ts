@@ -1,11 +1,15 @@
 import { Context, Logger } from "koishi";
+import { Config } from "..";
+import { registerStreamDataHandler } from "../streamDataHandler";
 
 export const registerUserCommand = (
   ctx: Context,
   parentLogger: Logger,
+  config: Config,
   locale: string
 ) => {
   const logger = parentLogger.extend("user");
+  if (process.env.DEBUG) logger.level = 3;
 
   ctx
     .command("user <...names>")
@@ -15,10 +19,10 @@ export const registerUserCommand = (
       logger.debug("check for user command entered");
 
       if (argv.options.add === undefined && argv.options.delete === undefined) {
-        return ctx.i18n.render("user_option_undefined", [], locale);
+        return ctx.i18n.text([locale], ["user_option_undefined"], []);
       }
       if (names.length === 0) {
-        return ctx.i18n.render("user_no_name_supplied", [], locale);
+        return ctx.i18n.text([locale], ["user_no_name_supplied"], []);
       }
     })
     .action(async (argv, ...names) => {
@@ -29,18 +33,18 @@ export const registerUserCommand = (
       for (const name of names) {
         const twitterUser = await ctx.twitterApi.selectUser(undefined, name);
         if (twitterUser === undefined)
-          return ctx.i18n.render("user_name_not_found", [name], locale);
+          return ctx.i18n.text([locale], ["user_name_not_found"], [name]);
         if (argv.options.add) {
           const isOk = await ctx.twitterDatabase.registerUser(
             argv.session.guildId,
-            undefined,
+            twitterUser.data.id,
             name
           );
           messages.push(
-            ctx.i18n.render(
-              isOk ? "user_register_complete" : "user_register_failed",
-              [name],
-              locale
+            ctx.i18n.text(
+              [locale],
+              [isOk ? "user_register_complete" : "user_register_failed"],
+              [name]
             )
           );
           updated = updated || isOk;
@@ -51,10 +55,10 @@ export const registerUserCommand = (
             name
           );
           messages.push(
-            ctx.i18n.render(
-              isOk ? "user_unregister_complete" : "user_unregister_failed",
-              [name],
-              locale
+            ctx.i18n.text(
+              [locale],
+              [isOk ? "user_unregister_complete" : "user_unregister_failed"],
+              [name]
             )
           );
           updated = updated || isOk;
@@ -63,7 +67,15 @@ export const registerUserCommand = (
 
       if (updated) {
         const users = await ctx.twitterDatabase.selectUsers({});
+        const userIds = [
+          ...new Map(users.map((user) => [user.id, user])).values(),
+        ];
+
+        logger.debug(`loading users ${JSON.stringify(userIds)}`);
+
         await ctx.twitterApi.updateStreamRules(users);
+
+        registerStreamDataHandler(ctx, parentLogger, config, locale);
       }
 
       logger.debug("user command exited");

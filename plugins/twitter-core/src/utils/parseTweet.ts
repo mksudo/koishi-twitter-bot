@@ -18,7 +18,7 @@ export const parseTweet = (taskContext: ITaskContext) => {
       body = tweet.tombstone.text.text;
     }
 
-    return head + body + `\n[QUOTE] ${quote}`;
+    return head + body + quote === "" ? "" : `\n[QUOTE] ${quote}`;
   });
 
   return parsedTweets.join("\n");

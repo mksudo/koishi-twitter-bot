@@ -48,9 +48,13 @@ class TwitterDatabase extends Service {
    * This method is called when the service is starting
    */
   protected async start() {
+    logger.debug("service starting");
+
     extendTwitterUser(this.ctx);
     extendTwitterHistory(this.ctx);
     extendTwitterCustomized(this.ctx);
+
+    logger.debug("service started");
   }
 
   /**

@@ -17,7 +17,7 @@ declare module "koishi" {
 }
 
 export const name = "twitterHandler";
-export const using = ["puppeteer"];
+export const using = ["puppeteer"] as const;
 const logger = new Logger(name);
 if (process.env.DEBUG) logger.level = 3;
 
@@ -32,6 +32,12 @@ class TwitterHandler extends Service {
   constructor(ctx: Context, protected config: TwitterHandler.Config) {
     super(ctx, name);
     this.taskExecutor = new TaskExecutor(4, logger);
+  }
+
+  protected async start() {
+    logger.debug("service starting");
+
+    logger.debug("service started");
   }
 
   /**

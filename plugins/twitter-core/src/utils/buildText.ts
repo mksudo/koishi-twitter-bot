@@ -29,7 +29,7 @@ export const buildText = async (
       to: "zh-CN",
     });
     currText +=
-      ctx.i18n.render("translation", [translation.text], locale) + "\n";
+      ctx.i18n.text([locale], ["translation"], [translation.text]) + "\n";
   }
 
   if (userConfig.extended) {

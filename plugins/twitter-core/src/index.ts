@@ -1,37 +1,25 @@
-import { Argv, Context, Logger, Schema, segment } from "koishi";
+import { Context, Logger, Schema } from "koishi";
 import TwitterDatabase, {
-  ITwitterCustomized,
-  ITwitterUser,
-  Modifier,
+  name as twitterDatabaseName,
 } from "koishi-plugin-twitter-database";
-import TwitterApi, {
-  ETwitterStreamEvent,
-  TweetType,
-} from "koishi-plugin-twitter-api";
-import TwitterHandler, { ITaskContext } from "koishi-plugin-twitter-handler";
-import { parseTweet } from "./utils/parseTweet";
-import { parseEntities } from "./utils/parseEntities";
-import { buildText } from "./utils/buildText";
-import { getDummyUser } from "./utils/getDummyUser";
-import { ExpandedConfig } from "./models/expandedConfig";
-import { loadBackgroundToExpandedConfig } from "./utils/loadToExpandedConfig/loadBackgroundToExpandedConfig";
-import { loadTagToExpandedConfig } from "./utils/loadToExpandedConfig/loadTagToExpandedConfig";
-import { loadCSSToExpandedConfig } from "./utils/loadToExpandedConfig/loadCSSToExpandedConfig";
-import { saveCSSContent } from "./utils/saveCustomizedContent/saveCSSContent";
-import { saveImageContent } from "./utils/saveCustomizedContent/saveImageContent";
+import TwitterApi, { name as twitterApiName } from "koishi-plugin-twitter-api";
+import TwitterHandler, {
+  name as twitterHandlerName,
+} from "koishi-plugin-twitter-handler";
 import { registerScreenshotCommand } from "./commands/screenshot";
 import { registerTranslateCommand } from "./commands/translate";
 import { registerCheckCommand } from "./commands/check";
 import { registerSetCommand } from "./commands/set";
 import { registerUserCommand } from "./commands/user";
 import { registerStreamDataHandler } from "./streamDataHandler";
+import { registerTestCommand } from "./commands/test";
 
 const locale = "zh";
 export const name = "twitterCore";
 export const using = [
-  TwitterDatabase.name,
-  TwitterApi.name,
-  TwitterHandler.name,
+  twitterDatabaseName,
+  twitterApiName,
+  twitterHandlerName,
 ] as const;
 
 const logger = new Logger(name);
@@ -48,19 +36,27 @@ export const Config: Schema<Config> = Schema.object({
 });
 
 export function apply(ctx: Context, config: Config) {
+  logger.info("core loading");
   // only care about group commands
   ctx.on("ready", async () => {
-    logger.debug("ready callback entered");
+    logger.warn("ready callback entered");
 
-    ctx.i18n.define(locale, require("./locales/zh"));
+    ctx.i18n.define(locale, require("./locales/zh.yml"));
 
-    registerStreamDataHandler(ctx, logger, config, locale);
+    logger.debug(JSON.stringify(ctx.i18n._data, undefined, 2));
 
     const users = await ctx.twitterDatabase.selectUsers({});
     const userIds = [...new Map(users.map((user) => [user.id, user])).values()];
 
-    await ctx.twitterApi.updateStreamRules(userIds);
-    await ctx.twitterApi.getTwitterStream().connect();
+    logger.debug(`loading users ${JSON.stringify(userIds)}`);
+
+    if (userIds.length > 0) {
+      await ctx.twitterApi.updateStreamRules(userIds);
+
+      registerStreamDataHandler(ctx, logger, config, locale);
+
+      await ctx.twitterApi.getTwitterStream().connect();
+    }
 
     logger.debug("ready callback exited");
   });
@@ -75,5 +71,7 @@ export function apply(ctx: Context, config: Config) {
 
   registerSetCommand(groupCtx, logger, locale);
 
-  registerUserCommand(groupCtx, logger, locale);
+  registerUserCommand(groupCtx, logger, config, locale);
+
+  registerTestCommand(ctx, logger, locale);
 }

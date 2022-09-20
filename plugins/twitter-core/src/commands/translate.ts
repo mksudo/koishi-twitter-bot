@@ -7,6 +7,7 @@ export const registerTranslateCommand = (
   locale: string
 ) => {
   const logger = parentLogger.extend("translate");
+  if (process.env.DEBUG) logger.level = 3;
 
   ctx
     .command("translate <indexOrUrl: string>")
@@ -28,10 +29,10 @@ export const registerTranslateCommand = (
         );
 
         if (history === undefined) {
-          return ctx.i18n.render(
-            "translate_index_not_found",
-            [indexOrUrl],
-            locale
+          return ctx.i18n.text(
+            [locale],
+            ["translate_index_not_found"],
+            [indexOrUrl]
           );
         }
 
@@ -52,7 +53,7 @@ export const registerTranslateCommand = (
         url = indexOrUrl;
         const name = url.match(/\w+(?=\/status)/gm);
         if (name === null) {
-          return ctx.i18n.render("translate_url_name_not_found", [], locale);
+          return ctx.i18n.text([locale], ["translate_url_name_not_found"], []);
         }
         customized = await ctx.twitterDatabase.selectCustomized(
           argv.session.guildId,
@@ -62,13 +63,13 @@ export const registerTranslateCommand = (
       } else {
         logger.warn(`invalid param detected, indexOrUrl = ${indexOrUrl}`);
 
-        return ctx.i18n.render("translate_invalid_index_or_url", [], locale);
+        return ctx.i18n.text([locale], ["translate_invalid_index_or_url"], []);
       }
 
       logger.debug("asking for translation input");
 
       await argv.session.sendQueued(
-        ctx.i18n.render("translate_ask_for_translation", [], locale)
+        ctx.i18n.text([locale], ["translate_ask_for_translation"], [])
       );
       translation = await argv.session.prompt();
       translation = segment.unescape(translation);
@@ -84,7 +85,7 @@ export const registerTranslateCommand = (
       logger.debug("translation task finished");
 
       if (translationResult.screenshotContext.screenshot === undefined) {
-        return ctx.i18n.render("screenshot_went_wrong", [], locale);
+        return ctx.i18n.text([locale], ["screenshot_went_wrong"], []);
       }
 
       logger.debug("translate command exited");

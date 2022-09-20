@@ -10,6 +10,7 @@ export const registerCheckCommand = (
   locale: string
 ) => {
   const logger = parentLogger.extend("check");
+  if (process.env.DEBUG) logger.level = 3;
 
   ctx
     .command("check <...names>")

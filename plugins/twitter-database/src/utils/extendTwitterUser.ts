@@ -5,7 +5,7 @@ import { Context } from "koishi";
  * @param ctx the context of koishijs
  */
 export const extendTwitterUser = (ctx: Context) => {
-  ctx.database.extend(
+  ctx.model.extend(
     "twitterUser",
     {
       registeredBy: "string",

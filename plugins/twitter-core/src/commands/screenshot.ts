@@ -10,6 +10,7 @@ export const registerScreenshotCommand = (
   locale: string
 ) => {
   const logger = parentLogger.extend("screenshot");
+  if (process.env.DEBUG) logger.level = 3;
 
   ctx
     .command("screenshot <url: string>")
@@ -21,7 +22,7 @@ export const registerScreenshotCommand = (
 
       if (screenshotResult.screenshotContext.screenshot === undefined) {
         logger.warn("something went wrong during screenshot");
-        return ctx.i18n.render("screenshot_went_wrong", [], locale);
+        return ctx.i18n.text([locale], ["screenshot_went_wrong"], []);
       }
 
       logger.debug("parsing text to string");

@@ -14,6 +14,7 @@ export const registerSetCommand = (
   locale: string
 ) => {
   const logger = parentLogger.extend("set");
+  if (process.env.DEBUG) logger.level = 3;
 
   ctx
     .command("set <name: string> <...keys>")
@@ -33,10 +34,10 @@ export const registerSetCommand = (
       );
 
       if (invalidKeys.length !== 0)
-        return ctx.i18n.render(
-          "set_check_invalid_key",
-          [invalidKeys.join("; ")],
-          locale
+        return ctx.i18n.text(
+          [locale],
+          ["set_check_invalid_key"],
+          [invalidKeys.join("; ")]
         );
     })
     .action(async (argv, name, ...keys) => {
@@ -61,7 +62,7 @@ export const registerSetCommand = (
           name
         );
         if (currConfig === undefined)
-          return ctx.i18n.render("set_user_not_found", [name], locale);
+          return ctx.i18n.text([locale], ["set_user_not_found"], [name]);
         configs.push(currConfig);
       }
 
@@ -86,17 +87,17 @@ export const registerSetCommand = (
             userModifier[key] = argv.options.off ? true : false;
           } else {
             await argv.session.sendQueued(
-              ctx.i18n.render("set_ask_for_customized_content", [key], locale)
+              ctx.i18n.text([locale], ["set_ask_for_customized_content"], [key])
             );
             const result = await argv.session.prompt();
             const parsedResult = segment.parse(result)[0];
 
             if (key === "css") {
               if (parsedResult.type !== "text") {
-                return ctx.i18n.render(
-                  "set_invalid_customized_content_type",
-                  ["text", parsedResult.type],
-                  undefined
+                return ctx.i18n.text(
+                  [locale],
+                  ["set_invalid_customized_content_type"],
+                  ["text", parsedResult.type]
                 );
               } else {
                 const cssFilePath = await saveCSSContent(
@@ -107,10 +108,10 @@ export const registerSetCommand = (
               }
             } else if (key === "tag" || key === "background") {
               if (parsedResult.type !== "image") {
-                return ctx.i18n.render(
-                  "set_invalid_customized_content_type",
-                  ["image", parsedResult.type],
-                  undefined
+                return ctx.i18n.text(
+                  [locale],
+                  ["set_invalid_customized_content_type"],
+                  ["image", parsedResult.type]
                 );
               } else {
                 const imageFilePath = await saveImageContent(
@@ -130,10 +131,10 @@ export const registerSetCommand = (
             userModifier
           );
           messages.push(
-            ctx.i18n.render(
-              userModifyResult ? "set_user_succeeded" : "set_user_failed",
-              [config.name],
-              locale
+            ctx.i18n.text(
+              [locale],
+              [userModifyResult ? "set_user_succeeded" : "set_user_failed"],
+              [config.name]
             )
           );
         }
@@ -144,12 +145,14 @@ export const registerSetCommand = (
           const customizedModifyResult =
             await ctx.twitterDatabase.modifyCustomized(customizedModifier);
           messages.push(
-            ctx.i18n.render(
-              customizedModifyResult
-                ? "set_customized_succeeded"
-                : "set_customized_failed",
-              [config.name],
-              locale
+            ctx.i18n.text(
+              [locale],
+              [
+                customizedModifyResult
+                  ? "set_customized_succeeded"
+                  : "set_customized_failed",
+              ],
+              [config.name]
             )
           );
         }

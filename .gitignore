@@ -4,6 +4,7 @@ dist
 accounts
 
 node_modules
+koishi.yml
 npm-debug.log
 yarn-debug.log
 yarn-error.log
@@ -13,6 +14,7 @@ test/*/**
 .eslintcache
 .DS_Store
 .idea
+.vite
 .vscode
 *.suo
 *.ntvs*
