@@ -26,6 +26,8 @@ export class TranslateHandler extends TaskHandler {
     taskContext.page.on("request", async (request) => {
       if (!isTweetDetailRequest(request.url())) return request.continue();
 
+      if (request.method() !== "GET") return request.continue();
+
       this.preHandleLogger.debug("request intercepted");
 
       const result = await sendRequestForTweetDetail(
@@ -124,11 +126,11 @@ export class TranslateHandler extends TaskHandler {
     this.handleLogger.debug("entered");
 
     this.handleLogger.debug("adding tag");
-    await addTag(taskContext);
+    await addTag(taskContext, this.handleLogger);
     this.handleLogger.debug("adding background");
-    await addBackground(taskContext);
+    await addBackground(taskContext, this.handleLogger);
     this.handleLogger.debug("adding css");
-    await addCSS(taskContext);
+    await addCSS(taskContext, this.handleLogger);
 
     // await removeUnmodifiedTranslationSeperator(taskContext);
 

@@ -33,6 +33,8 @@ export class ScreenshotHandler extends TaskHandler {
     taskContext.page.on("request", async (request) => {
       if (!isTweetDetailRequest(request.url())) return request.continue();
 
+      if (request.method() !== "GET") return request.continue();
+
       this.preHandleLogger.debug("request intercepted");
 
       const result = await sendRequestForTweetDetail(

@@ -43,8 +43,6 @@ export function apply(ctx: Context, config: Config) {
 
     ctx.i18n.define(locale, require("./locales/zh.yml"));
 
-    logger.debug(JSON.stringify(ctx.i18n._data, undefined, 2));
-
     const users = await ctx.twitterDatabase.selectUsers({});
     const userIds = [...new Map(users.map((user) => [user.id, user])).values()];
 

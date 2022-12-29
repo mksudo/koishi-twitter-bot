@@ -2,6 +2,7 @@ lib
 logs
 dist
 accounts
+resources
 
 node_modules
 koishi.yml

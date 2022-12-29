@@ -23,7 +23,7 @@ export const sendRequestForTweetDetail = async (
   request: HTTPRequest,
   cookies: Protocol.Network.Cookie[]
 ) => {
-  const headers = await request.headers();
+  const headers = request.headers();
   const twitterCookies = cookies.filter((cookie) =>
     cookieNames.some((cookieName) => cookieName === cookie.name)
   );

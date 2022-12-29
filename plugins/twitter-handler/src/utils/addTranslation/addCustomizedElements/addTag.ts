@@ -1,4 +1,5 @@
 import { readFile } from "fs/promises";
+import { Logger } from "koishi";
 import { ITaskContext } from "../../../models/taskContext";
 import { createBase64ImageUrl } from "../../createBase64ImageUrl";
 
@@ -6,15 +7,22 @@ import { createBase64ImageUrl } from "../../createBase64ImageUrl";
  * Add tag to the webpage
  * @param taskContext the shared task context
  */
-export const addTag = async (taskContext: ITaskContext) => {
-  if (!taskContext.translateContext?.customized?.tag) return;
+export const addTag = async (taskContext: ITaskContext, logger: Logger) => {
+  if (!taskContext.translateContext?.customized?.tag) {
+    logger.debug("no existing tag data, skipping");
+    return;
+  }
 
-  const tagData = await readFile(
-    taskContext.translateContext.customized.background,
-    { encoding: "base64" }
-  ).catch(() => "");
+  const tagData = await readFile(taskContext.translateContext.customized.tag, {
+    encoding: "base64",
+  }).catch(() => "");
 
-  if (!tagData) return;
+  if (!tagData) {
+    logger.debug("error when reading tag data, skipping");
+    return;
+  }
+
+  logger.debug("adding tag data to web page");
 
   await taskContext.page.evaluate(
     (tagData: string, majorTweetIndex: number, majorTranslation: string) => {

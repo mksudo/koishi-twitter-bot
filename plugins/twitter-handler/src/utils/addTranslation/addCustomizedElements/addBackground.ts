@@ -1,4 +1,5 @@
 import { readFile } from "fs/promises";
+import { Logger } from "koishi";
 import { ITaskContext } from "../../../models/taskContext";
 import { createBase64ImageUrl } from "../../createBase64ImageUrl";
 
@@ -6,15 +7,24 @@ import { createBase64ImageUrl } from "../../createBase64ImageUrl";
  * Add background to the webpage
  * @param taskContext the shared task context
  */
-export const addBackground = async (taskContext: ITaskContext) => {
-  if (!taskContext.translateContext?.customized?.background) return;
+export const addBackground = async (
+  taskContext: ITaskContext,
+  logger: Logger
+) => {
+  if (!taskContext.translateContext?.customized?.background) {
+    logger.debug("no existing background data, skipping");
+    return;
+  }
 
   const backgroundData = await readFile(
     taskContext.translateContext.customized.background,
     { encoding: "base64" }
   ).catch(() => "");
 
-  if (!backgroundData) return;
+  if (!backgroundData) {
+    logger.debug("error when reading background data, skipping");
+    return;
+  }
 
   await taskContext.page.evaluate((backgroundData: string) => {
     const timelineSection = document.querySelector("section");

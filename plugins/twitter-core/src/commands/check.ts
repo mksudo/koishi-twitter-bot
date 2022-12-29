@@ -1,8 +1,8 @@
 import { Context, Logger } from "koishi";
-import { ExpandedConfig } from "../models/expandedConfig";
-import { loadBackgroundToExpandedConfig } from "../utils/loadToExpandedConfig/loadBackgroundToExpandedConfig";
-import { loadCSSToExpandedConfig } from "../utils/loadToExpandedConfig/loadCSSToExpandedConfig";
-import { loadTagToExpandedConfig } from "../utils/loadToExpandedConfig/loadTagToExpandedConfig";
+import { ITwitterUser } from "koishi-plugin-twitter-database";
+import { loadBackground } from "../utils/loadCustomizedContent/loadBackground";
+import { loadCSS } from "../utils/loadCustomizedContent/loadCSS";
+import { loadTag } from "../utils/loadCustomizedContent/loadTag";
 
 export const registerCheckCommand = (
   ctx: Context,
@@ -20,7 +20,7 @@ export const registerCheckCommand = (
     .action(async (argv, ...names) => {
       logger.debug(`check command entered, names: ${JSON.stringify(names)}`);
 
-      const configs: ExpandedConfig[] = await ctx.twitterDatabase.selectUsers({
+      const configs: ITwitterUser[] = await ctx.twitterDatabase.selectUsers({
         registeredBy: argv.session.guildId,
       });
 
@@ -32,34 +32,50 @@ export const registerCheckCommand = (
       }
 
       for (const name of names) {
-        logger.debug(`checking user ${name}`);
+        logger.debug(`checking config for user ${name}`);
 
-        const config = configs.find((config) => config.name === name);
+        const currConfig = configs.find((config) => config.name === name);
 
-        if (config === undefined) {
+        if (currConfig === undefined) {
           messages.push(`${name}: cannot find corresponding user`);
           continue;
         }
 
-        const customized = await ctx.twitterDatabase.selectCustomized(
-          argv.session.guildId,
-          config.id
-        );
+        messages.push(`${name}: `);
 
-        if (customized !== undefined) {
-          logger.debug(`loading customized content for user ${name}`);
-          if (argv.options.background !== undefined)
-            await loadBackgroundToExpandedConfig(config, customized.background);
-          if (argv.options.tag !== undefined)
-            await loadTagToExpandedConfig(config, customized.tag);
-          if (argv.options.css !== undefined)
-            await loadCSSToExpandedConfig(config, customized.css);
-          logger.debug(`customized content loaded for user ${name}`);
+        for (const [key, value] of Object.entries(currConfig)) {
+          if (typeof value === "boolean") {
+            messages.push(`  ${key}: ${value}`);
+          }
         }
 
-        messages.push(`${name}: ${JSON.stringify(config, undefined, 2)}`);
+        const currCustomized = await ctx.twitterDatabase.selectCustomized(
+          argv.session.guildId,
+          currConfig.id
+        );
 
-        logger.debug(`user ${name} checked`);
+        if (argv.options.tag) {
+          logger.debug(
+            `loading customized tag ${currCustomized.tag} for user ${name}`
+          );
+          messages.push(`  tag: ${await loadTag(currCustomized.tag)}`);
+        }
+        if (argv.options.background) {
+          logger.debug(
+            `loading customized background ${currCustomized.background} for user ${name}`
+          );
+          messages.push(
+            `  background: ${await loadBackground(currCustomized.background)}`
+          );
+        }
+        if (argv.options.css) {
+          logger.debug(
+            `loading customized css ${currCustomized.css} for user ${name}`
+          );
+          messages.push(`  css: ${await loadCSS(currCustomized.css)}`);
+        }
+
+        logger.debug(`config of user ${name} loaded`);
       }
 
       logger.debug("check command exited");

@@ -52,6 +52,17 @@ export const registerSetCommand = (
         const currConfigs = await ctx.twitterDatabase.selectUsers({
           registeredBy: argv.session.guildId,
         });
+
+        if (currConfigs.length === 0) {
+          logger.debug("exiting with no config found");
+
+          return ctx.i18n.text(
+            [locale],
+            ["set_no_user_found_for_all_user_option"],
+            []
+          );
+        }
+
         configs.push(...currConfigs);
       } else {
         logger.debug(`getting config for user ${name}`);
@@ -86,11 +97,12 @@ export const registerSetCommand = (
           if (dummyUser[key] !== undefined) {
             userModifier[key] = argv.options.off ? true : false;
           } else {
-            await argv.session.sendQueued(
+            await argv.session.send(
               ctx.i18n.text([locale], ["set_ask_for_customized_content"], [key])
             );
+            logger.debug("waiting for prompt");
             const result = await argv.session.prompt();
-            const parsedResult = segment.parse(result)[0];
+            let parsedResult = segment.parse(result)[0];
 
             if (key === "css") {
               if (parsedResult.type !== "text") {
@@ -111,7 +123,7 @@ export const registerSetCommand = (
                 return ctx.i18n.text(
                   [locale],
                   ["set_invalid_customized_content_type"],
-                  ["image", parsedResult.type]
+                  ["image"]
                 );
               } else {
                 const imageFilePath = await saveImageContent(
@@ -141,19 +153,9 @@ export const registerSetCommand = (
 
         if (Object.keys(customizedModifier).length > 3) {
           logger.debug("customized contents are modified");
-
-          const customizedModifyResult =
-            await ctx.twitterDatabase.modifyCustomized(customizedModifier);
+          await ctx.twitterDatabase.modifyCustomized(customizedModifier);
           messages.push(
-            ctx.i18n.text(
-              [locale],
-              [
-                customizedModifyResult
-                  ? "set_customized_succeeded"
-                  : "set_customized_failed",
-              ],
-              [config.name]
-            )
+            ctx.i18n.text([locale], ["set_customized_succeeded"], [config.name])
           );
         }
       }

@@ -35,11 +35,11 @@ describe("Twitter Database", function () {
 
       expect(result).to.exist;
 
-      expect(result.registeredBy).to.equal(groupId);
-      expect(result.id).to.equal("1236065517430902784");
-      expect(result.name).to.equal("bilibiliyami");
+      expect(result!.registeredBy).to.equal(groupId);
+      expect(result!.id).to.equal("1236065517430902784");
+      expect(result!.name).to.equal("bilibiliyami");
 
-      for (const value of Object.values(result)) {
+      for (const value of Object.values(result!)) {
         if (typeof value === "boolean") {
           expect(value).to.be.true;
         }
@@ -55,11 +55,11 @@ describe("Twitter Database", function () {
 
       expect(result).to.exist;
 
-      expect(result.registeredBy).to.equal(groupId);
-      expect(result.id).to.equal("1236065517430902784");
-      expect(result.name).to.equal("bilibiliyami");
+      expect(result!.registeredBy).to.equal(groupId);
+      expect(result!.id).to.equal("1236065517430902784");
+      expect(result!.name).to.equal("bilibiliyami");
 
-      for (const value of Object.values(result)) {
+      for (const value of Object.values(result!)) {
         if (typeof value === "boolean") {
           expect(value).to.be.true;
         }
@@ -77,8 +77,11 @@ describe("Twitter Database", function () {
         "bilibiliyami"
       );
 
-      for (const [key, value] of Object.entries(idResult)) {
-        expect(value).to.be.equal(nameResult[key]);
+      expect(idResult).to.exist;
+      expect(nameResult).to.exist;
+
+      for (const [key, value] of Object.entries(idResult!)) {
+        expect(value).to.be.equal(nameResult![key]);
       }
     });
 
@@ -174,8 +177,9 @@ describe("Twitter Database", function () {
         "1236065517430902784"
       );
 
-      expect(modifiedConfig.comment).to.be.false;
-      expect(modifiedConfig.translation).to.be.false;
+      expect(modifiedConfig).to.exist;
+      expect(modifiedConfig!.comment).to.be.false;
+      expect(modifiedConfig!.translation).to.be.false;
     });
   });
 
@@ -196,11 +200,13 @@ describe("Twitter Database", function () {
     it("[TEST] Get existing history", async function () {
       const firstResult = await app.twitterDatabase.selectHistory(groupId, 1);
       expect(firstResult).to.exist;
-      expect(firstResult.url).to.equal("Haiyi_NEKO/status/1570477561196744709");
+      expect(firstResult!.url).to.equal(
+        "Haiyi_NEKO/status/1570477561196744709"
+      );
 
       const secondResult = await app.twitterDatabase.selectHistory(groupId, 2);
       expect(secondResult).to.exist;
-      expect(secondResult.url).to.equal(
+      expect(secondResult!.url).to.equal(
         "moricalliope/status/1570469122995277824"
       );
     });
@@ -237,7 +243,7 @@ describe("Twitter Database", function () {
     });
 
     it("[TEST] Modify existing customized", async function () {
-      const result = await app.twitterDatabase.modifyCustomized({
+      await app.twitterDatabase.modifyCustomized({
         registeredBy: groupId,
         id: "1236065517430902784",
         name: "bilibiliyami",
@@ -245,13 +251,12 @@ describe("Twitter Database", function () {
         background: "(扭曲)(蠕动)(阴暗地爬行)",
       });
 
-      expect(result).to.be.true;
-
       const modifiedCustomized = await app.twitterDatabase.selectCustomized(
         groupId,
         "1236065517430902784"
       );
 
+      expect(modifiedCustomized).to.exist;
       expect(modifiedCustomized.tag).to.equal("yami!");
       expect(modifiedCustomized.background).to.equal(
         "(扭曲)(蠕动)(阴暗地爬行)"

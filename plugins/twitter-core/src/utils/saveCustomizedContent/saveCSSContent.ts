@@ -1,4 +1,4 @@
-import { writeFile } from "fs/promises";
+import { access, mkdir, writeFile } from "fs/promises";
 import { alphanumeric } from "nanoid-dictionary";
 import { customAlphabet } from "nanoid/async";
 
@@ -7,6 +7,7 @@ export const saveCSSContent = async (cssContent: string, guildId: string) => {
   const filename = await filenameGenerator();
 
   const dir = `./resources/${guildId}`;
+  await access(dir).catch(() => mkdir(dir, { recursive: true }));
   const filepath = `${dir}/${filename}.css`;
 
   await writeFile(filepath, cssContent, { encoding: "utf-8" });

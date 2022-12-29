@@ -248,18 +248,7 @@ class TwitterDatabase extends Service {
    */
   async modifyCustomized(modifier: Modifier<ITwitterCustomized>) {
     logFunctionCall(logger, this.modifyCustomized, modifier);
-
-    const exists = await existInDatabase(this.ctx, "twitterCustomized", {
-      registeredBy: modifier.registeredBy,
-      id: modifier.id,
-      name: modifier.name,
-    });
-
-    if (exists) {
-      await this.ctx.database.upsert("twitterCustomized", [modifier]);
-      return true;
-    }
-    return false;
+    await this.ctx.database.upsert("twitterCustomized", [modifier]);
   }
 
   /**
