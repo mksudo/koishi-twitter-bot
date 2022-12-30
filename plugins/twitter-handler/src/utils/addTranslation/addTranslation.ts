@@ -44,12 +44,19 @@ export const addTranslation = (
   isMajorTweet?: boolean
 ) => {
   const prevTextLength = tweet.legacy.full_text.length;
+  tweet.legacy.entities?.media?.forEach((media) => {
+    tweet.legacy.full_text = tweet.legacy.full_text.replace(media.url, "");
+  });
   tweet.legacy.full_text += "\n\n" + translation.translation;
   const textLengthOffset = tweet.legacy.full_text.length - prevTextLength;
 
   tweet.legacy.lang = "zh";
   tweet.legacy.display_text_range[1] = Number.MAX_SAFE_INTEGER;
-  tweet.legacy.entities.media?.forEach((media) => {
+  tweet.legacy.entities?.media?.forEach((media) => {
+    media.indices[0] += textLengthOffset;
+    media.indices[1] += textLengthOffset;
+  });
+  tweet.legacy.extended_entities?.media?.forEach((media) => {
     media.indices[0] += textLengthOffset;
     media.indices[1] += textLengthOffset;
   });
