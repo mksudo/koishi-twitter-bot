@@ -1,7 +1,6 @@
 {
   "name": "koishi-plugin-twitter-handler",
-  "description": "handle tweet content and provide tweet functionalities for bot",
-  "private": true,
+  "description": "provide tweet content and functionalities for the bot",
   "version": "1.0.0",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
@@ -17,15 +16,13 @@
     "plugin"
   ],
   "peerDependencies": {
-    "koishi": "^4.9.0"
+    "koishi": "^4.10.10"
   },
   "dependencies": {
     "@types/p-retry": "^3.0.1",
-    "@types/twitter-text": "^3.1.2",
-    "axios": "^0.27.2",
+    "@types/twitter-text": "^3.1.4",
     "p-queue": "^7.3.0",
-    "p-retry": "^5.1.1",
-    "puppeteer-core": "^13.7.0",
+    "p-retry": "^5.1.2",
     "twitter-text": "^3.1.0"
   }
 }

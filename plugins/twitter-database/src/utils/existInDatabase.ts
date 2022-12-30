@@ -1,4 +1,4 @@
-import { Context, Query, Selector, Tables } from "koishi";
+import { Context, Query, Selection, Tables } from "koishi";
 
 /**
  * Check if a data is already in the database
@@ -9,10 +9,10 @@ import { Context, Query, Selector, Tables } from "koishi";
  *
  * @returns whether the query found something in the database or not
  */
-export const existInDatabase = async <T extends Selector<Tables>>(
+export const existInDatabase = async <T extends Selection.Selector<Tables>>(
   ctx: Context,
   table: T,
-  query?: Query<Selector.Resolve<Tables, T>>
+  query?: Query<Selection.Resolve<Tables, T>>
 ) => {
   const result = await ctx.database.select(table, query).execute();
 

@@ -1,5 +1,6 @@
 import fetch from "node-fetch";
-import { access, mkdir, writeFile } from "fs/promises";
+import fs from "fs";
+import { access, mkdir } from "fs/promises";
 import { alphanumeric } from "nanoid-dictionary";
 import { customAlphabet } from "nanoid/async";
 
@@ -11,10 +12,9 @@ export const saveImageContent = async (url: string, guildId: string) => {
   await access(dir).catch(() => mkdir(dir, { recursive: true }));
   const filepath = `${dir}/${filename}.png`;
 
-  const fetchResponse = await fetch(url);
-  const imageContent = await fetchResponse.blob();
-
-  await writeFile(filepath, imageContent.stream());
+  await fetch(url).then((response) => {
+    response.body.pipe(fs.createWriteStream(filepath));
+  });
 
   return filepath;
 };

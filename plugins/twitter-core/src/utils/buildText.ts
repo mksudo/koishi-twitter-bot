@@ -1,4 +1,4 @@
-import translate from "@vitalets/google-translate-api";
+import { translate } from "@vitalets/google-translate-api";
 import { segment, Context } from "koishi";
 import { ITwitterUser } from "koishi-plugin-twitter-database";
 import { ITaskContext } from "koishi-plugin-twitter-handler";
