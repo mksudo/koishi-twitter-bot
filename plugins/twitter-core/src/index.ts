@@ -37,6 +37,19 @@ export const Config: Schema<Config> = Schema.object({
 
 export function apply(ctx: Context, config: Config) {
   logger.info("core loading");
+
+  ctx.on("guild-request", async (session) => {
+    await session.bot.handleGuildRequest(session.messageId, true);
+    const message = ctx.i18n.text([locale], ["request_guild_response"], []);
+    await session.bot.sendMessage(session.guildId, message);
+  });
+
+  ctx.on("friend-request", async (session) => {
+    await session.bot.handleFriendRequest(session.messageId, true);
+    const message = ctx.i18n.text([locale], ["request_friend_response"], []);
+    await session.bot.sendPrivateMessage(session.userId, message);
+  });
+
   // only care about group commands
   ctx.on("ready", async () => {
     logger.warn("ready callback entered");
