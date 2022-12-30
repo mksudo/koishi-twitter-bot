@@ -141,6 +141,7 @@ commands:
       add: 增加订阅用户
       delete: 减少订阅用户
 
+translation: "翻译：{0}"
 stream_ondata_text_index: "序号：{0}"
 screenshot_went_wrong: "截图时发生未知错误，无法获取推文信息"
 translate_index_not_found: "提供的序号{0}对应的记录不存在"

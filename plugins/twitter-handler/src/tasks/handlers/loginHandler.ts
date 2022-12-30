@@ -21,10 +21,8 @@ export class LoginHandler extends TaskHandler {
     }
 
     this.handleLogger.debug("clicking login button");
-    await Promise.all([
-      taskContext.page.waitForNavigation(),
-      clickOnElement(await taskContext.page.$('a[href="/login"]')),
-    ]);
+    await clickOnElement(await taskContext.page.$('a[href="/login"]'));
+    await taskContext.page.waitForNavigation();
     this.handleLogger.debug("login button clicked");
 
     this.handleLogger.debug("waiting for username input element");
@@ -37,12 +35,10 @@ export class LoginHandler extends TaskHandler {
     this.handleLogger.debug("username typed");
 
     this.handleLogger.debug("clicking next button");
-    await Promise.all([
-      taskContext.page.waitForSelector(
-        'input[autocomplete="current-password"]'
-      ),
-      clickOnElement((await taskContext.page.$$('div[role="button"]'))[2]),
-    ]);
+    await taskContext.page.waitForSelector(
+      'input[autocomplete="current-password"]'
+    );
+    await clickOnElement((await taskContext.page.$$('div[role="button"]'))[2]);
     this.handleLogger.debug("next button clicked");
 
     this.handleLogger.debug("typing password");
@@ -53,21 +49,19 @@ export class LoginHandler extends TaskHandler {
     this.handleLogger.debug("password typed");
 
     this.handleLogger.debug("clicking login button");
-    await Promise.all([
-      Promise.race([
-        taskContext.page.waitForSelector(
-          'input[data-testid="SearchBox_Search_Input"]'
-        ),
-        taskContext.page.waitForSelector(
-          'input:not([data-testid="SearchBox_Search_Input"]):not([data-testid="fileInput"])'
-        ),
-      ]),
-      clickOnElement(
-        await taskContext.page.$(
-          'div[role="button"][data-testid="LoginForm_Login_Button"]'
-        )
+    await Promise.race([
+      taskContext.page.waitForSelector(
+        'input[data-testid="SearchBox_Search_Input"]'
+      ),
+      taskContext.page.waitForSelector(
+        'input:not([data-testid="SearchBox_Search_Input"]):not([data-testid="fileInput"])'
       ),
     ]);
+    await clickOnElement(
+      await taskContext.page.$(
+        'div[role="button"][data-testid="LoginForm_Login_Button"]'
+      )
+    );
     this.handleLogger.debug("login button clicked");
 
     this.handleLogger.debug("waiting for verification input element");
@@ -84,10 +78,8 @@ export class LoginHandler extends TaskHandler {
       this.handleLogger.debug("verification info typed");
 
       this.handleLogger.debug("clicking login button");
-      await Promise.all([
-        taskContext.page.waitForNavigation(),
-        clickOnElement((await taskContext.page.$$("div[role=button]"))[1]),
-      ]);
+      await clickOnElement((await taskContext.page.$$("div[role=button]"))[1]);
+      await taskContext.page.waitForNavigation();
       this.handleLogger.debug("login button clicked");
     } else {
       this.handleLogger.debug("no verification needed");
