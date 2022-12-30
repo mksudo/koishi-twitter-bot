@@ -82,9 +82,17 @@ export class TranslateHandler extends TaskHandler {
           taskContext.screenshotContext.url.lastIndexOf("/") + 1
         );
 
+        await access("./logs/translate").catch(() => mkdir("./logs/translate"));
+
+        const translateFilePath = `./logs/translate/${tweetId}.json`;
+
         writeFile(
-          `./logs/translate/${tweetId}.json`,
+          translateFilePath,
           JSON.stringify(result.data, undefined, 2)
+        ).catch(() =>
+          this.preHandleLogger.warn(
+            `writing to file ${translateFilePath} failed`
+          )
         );
       } catch (err) {
         const tweetId = taskContext.screenshotContext.url.substring(
