@@ -71,7 +71,7 @@ export const registerTranslateCommand = (
       await argv.session.sendQueued(
         ctx.i18n.text([locale], ["translate_ask_for_translation"], [])
       );
-      translation = await argv.session.prompt();
+      translation = await argv.session.prompt(30000);
       translation = segment.unescape(translation);
 
       logger.debug("translation input is parsed");
