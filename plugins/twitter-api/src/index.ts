@@ -20,7 +20,6 @@ declare module "koishi" {
 }
 
 export const name = "twitterApi";
-export const using = [twitterDatabaseName] as const;
 
 const logger = new Logger(name);
 if (process.env.DEBUG) logger.level = 3;
@@ -31,6 +30,8 @@ if (process.env.DEBUG) logger.level = 3;
  * on startup
  */
 class TwitterApi extends Service {
+  static using = [twitterDatabaseName] as const;
+
   protected twitterApi: TwitterApiProvider;
   protected twitterStream: TweetStream<TweetV2SingleStreamResult>;
   protected isDataHandlerRegistered: boolean;

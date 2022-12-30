@@ -29,7 +29,6 @@ declare module "koishi" {
 }
 
 export const name = "twitterDatabase";
-export const using = ["database"] as const;
 
 const logger = new Logger(name);
 if (process.env.DEBUG) logger.level = 3;
@@ -40,8 +39,10 @@ if (process.env.DEBUG) logger.level = 3;
  * on startup
  */
 class TwitterDatabase extends Service {
+  static using = ["database"] as const;
+
   constructor(ctx: Context) {
-    super(ctx, name);
+    super(ctx, name, true);
   }
 
   /**
@@ -187,7 +188,7 @@ class TwitterDatabase extends Service {
   async selectUsers(identifier: Query<ITwitterIdentifier>) {
     logFunctionCall(logger, this.selectUsers, identifier);
 
-    return await this.ctx.database.select("twitterUser", identifier).execute();
+    return this.ctx.database.select("twitterUser", identifier).execute();
   }
 
   /**
@@ -201,7 +202,7 @@ class TwitterDatabase extends Service {
   async addHistory(groupId: string, url: string) {
     logFunctionCall(logger, this.addHistory, groupId, url);
 
-    return await this.ctx.database.create("twitterHistory", {
+    return this.ctx.database.create("twitterHistory", {
       registeredBy: groupId,
       url,
     });
