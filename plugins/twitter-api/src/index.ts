@@ -96,6 +96,12 @@ class TwitterApi extends Service {
    * @param users all registered twitter users
    */
   async updateStreamRules(users: ITwitterUser[]) {
+    logger.debug(
+      `registering rules for users ${JSON.stringify(
+        users.map((user) => user.id)
+      )}`
+    );
+
     const userIdRules = users.map((user) => `from:${user.id}`);
     const rules = [];
     let currentRule = "";
