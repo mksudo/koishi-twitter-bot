@@ -8,7 +8,7 @@ export const registerTestCommand = (
   const logger = parentLogger.extend("test");
   if (process.env.DEBUG) logger.level = 3;
 
-  ctx.command("test <message: string>").action(async (argv, message) => {
+  ctx.command("test <message: text>").action(async (argv, message) => {
     logger.debug(`received message ${message}`);
 
     return message;
