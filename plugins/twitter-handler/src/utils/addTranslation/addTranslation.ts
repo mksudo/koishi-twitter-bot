@@ -43,10 +43,10 @@ export const addTranslation = (
   translation: ITranslation | IQuoteTranslation,
   isMajorTweet?: boolean
 ) => {
-  const prevTextLength = tweet.legacy.full_text.length;
   tweet.legacy.entities?.media?.forEach((media) => {
     tweet.legacy.full_text = tweet.legacy.full_text.replace(media.url, "");
   });
+  const prevTextLength = tweet.legacy.full_text.length;
   tweet.legacy.full_text += "\n\n" + translation.translation;
   const textLengthOffset = tweet.legacy.full_text.length - prevTextLength;
 
