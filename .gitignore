@@ -17,6 +17,7 @@ test/*/**
 .DS_Store
 .idea
 .vite
+.yarn
 .vscode
 *.suo
 *.ntvs*
