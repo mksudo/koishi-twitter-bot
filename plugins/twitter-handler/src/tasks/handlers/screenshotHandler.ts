@@ -152,6 +152,15 @@ export class ScreenshotHandler extends TaskHandler {
 
     this.handleLogger.debug(`clip area is ${JSON.stringify(clipArea)}`);
 
+    const pageViewport = taskContext.page.viewport();
+    if (clipArea.y + clipArea.height >= pageViewport.height) {
+      await taskContext.page.setViewport({
+        width: pageViewport.width,
+        height: clipArea.y + clipArea.height + 256,
+      });
+      await new Promise((r) => setTimeout(r, 1000));
+    }
+
     // take screenshot as base64 string
     taskContext.screenshotContext.screenshot ??=
       (await taskContext.page.screenshot({
