@@ -344,6 +344,7 @@ export namespace TwitterApi {
       };
       unmention_info: unknown;
       edit_control: EditControl;
+      is_translatable: boolean;
       legacy: Legacy;
       quick_promote_eligibility: {
         eligibility: string;

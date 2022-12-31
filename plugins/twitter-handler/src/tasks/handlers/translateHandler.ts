@@ -1,8 +1,17 @@
 import { access, mkdir, writeFile } from "fs/promises";
 import { ITaskContext } from "../../models/taskContext";
-import { addBackground } from "../../utils/addTranslation/addCustomizedElements/addBackground";
-import { addCSS } from "../../utils/addTranslation/addCustomizedElements/addCSS";
-import { addTag } from "../../utils/addTranslation/addCustomizedElements/addTag";
+import {
+  addBackground,
+  loadBackground,
+} from "../../utils/addTranslation/addCustomizedElements/addBackground";
+import {
+  addCSS,
+  loadCSS,
+} from "../../utils/addTranslation/addCustomizedElements/addCSS";
+import {
+  addTag,
+  loadTag,
+} from "../../utils/addTranslation/addCustomizedElements/addTag";
 import { addTranslation } from "../../utils/addTranslation/addTranslation";
 import { getTweets } from "../../utils/getTweets";
 import { isTweetDetailRequest } from "../../utils/isTweetDetailRequest";
@@ -22,6 +31,10 @@ export class TranslateHandler extends TaskHandler {
    */
   async preHandle(taskContext: ITaskContext) {
     this.preHandleLogger.debug("entered");
+
+    await loadTag(taskContext, this.preHandleLogger);
+    await loadBackground(taskContext, this.preHandleLogger);
+    await loadCSS(taskContext, this.preHandleLogger);
 
     taskContext.page.on("request", async (request) => {
       if (!isTweetDetailRequest(request.url())) return request.continue();
@@ -72,7 +85,12 @@ export class TranslateHandler extends TaskHandler {
 
             const isMajorTweet = translation.index === tweets.length - 1;
 
-            addTranslation(tweet, translation, isMajorTweet);
+            addTranslation(
+              tweet,
+              translation,
+              isMajorTweet,
+              taskContext.translateContext.customized
+            );
 
             this.preHandleLogger.debug("translation added");
           }
@@ -133,12 +151,18 @@ export class TranslateHandler extends TaskHandler {
   async handle(taskContext: ITaskContext) {
     this.handleLogger.debug("entered");
 
-    this.handleLogger.debug("adding tag");
-    await addTag(taskContext, this.handleLogger);
-    this.handleLogger.debug("adding background");
-    await addBackground(taskContext, this.handleLogger);
-    this.handleLogger.debug("adding css");
-    await addCSS(taskContext, this.handleLogger);
+    if (taskContext.translateContext.customized.tag !== undefined) {
+      this.handleLogger.debug("adding tag");
+      await addTag(taskContext, this.handleLogger);
+    }
+    if (taskContext.translateContext.customized.background !== undefined) {
+      this.handleLogger.debug("adding background");
+      await addBackground(taskContext, this.handleLogger);
+    }
+    if (taskContext.translateContext.customized.css !== undefined) {
+      this.handleLogger.debug("adding css");
+      await addCSS(taskContext, this.handleLogger);
+    }
 
     // await removeUnmodifiedTranslationSeperator(taskContext);
 

@@ -1,3 +1,4 @@
+import { ITwitterCustomized } from "koishi-plugin-twitter-database";
 import { IQuoteTranslation } from "../../models/translation/quoteTranslation";
 import { ITranslation } from "../../models/translation/translation";
 import { TwitterApi } from "../../models/twitterApi";
@@ -26,7 +27,11 @@ const addExtendedTranslation = (
         break;
       case "quote":
         if (tweet.quoted_status_result)
-          addTranslation(tweet.quoted_status_result.result, entityTranslation);
+          addTranslation(
+            tweet.quoted_status_result.result,
+            entityTranslation,
+            false
+          );
         break;
     }
   }
@@ -41,13 +46,27 @@ const addExtendedTranslation = (
 export const addTranslation = (
   tweet: TwitterApi.Tweet.TweetResult,
   translation: ITranslation | IQuoteTranslation,
-  isMajorTweet?: boolean
+  isMajorTweet: boolean,
+  customized?: ITwitterCustomized
 ) => {
   tweet.legacy.entities?.media?.forEach((media) => {
     tweet.legacy.full_text = tweet.legacy.full_text.replace(media.url, "");
   });
   const prevTextLength = tweet.legacy.full_text.length;
-  tweet.legacy.full_text += "\n\n" + translation.translation;
+
+  if (isMajorTweet && customized.tag !== undefined) {
+    // the img html element is treated as plain text by the page
+    // set span innerHTML to innerText to render the image properly
+    tweet.legacy.full_text +=
+      "\n\n" +
+      (isMajorTweet
+        ? `<img class="tag-image" src="data:image/png;base64,${customized.tag}" style="display: block;">`
+        : "") +
+      translation.translation;
+  } else {
+    tweet.legacy.full_text += "\n\n" + translation.translation;
+  }
+
   const textLengthOffset = tweet.legacy.full_text.length - prevTextLength;
 
   tweet.legacy.lang = "zh";
