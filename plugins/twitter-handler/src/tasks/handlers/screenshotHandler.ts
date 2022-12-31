@@ -6,6 +6,7 @@ import { getTweets } from "../../utils/getTweets";
 import { isTweetDetailRequest } from "../../utils/isTweetDetailRequest";
 import { sendRequestForTweetDetail } from "../../utils/sendRequestForTweetDetail";
 import { setNotSensitive } from "../../utils/setNotSensitive";
+import { waitFor } from "../../utils/waitFor";
 import { TaskHandler } from "../handler";
 
 /**
@@ -159,7 +160,7 @@ export class ScreenshotHandler extends TaskHandler {
         width: pageViewport.width,
         height: clipArea.y + clipArea.height + 256,
       });
-      await new Promise((r) => setTimeout(r, 1000));
+      await waitFor(1000);
     }
 
     // take screenshot as base64 string

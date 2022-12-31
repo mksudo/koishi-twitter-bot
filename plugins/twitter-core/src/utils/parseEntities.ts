@@ -18,5 +18,5 @@ export const parseEntities = (taskContext: ITaskContext) => {
     }
   }
 
-  return entities.join();
+  return entities.join("");
 };
