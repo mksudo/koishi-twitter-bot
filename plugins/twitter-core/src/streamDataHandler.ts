@@ -69,6 +69,20 @@ export const registerStreamDataHandler = (
 
       if (screenshotResult.screenshotContext.screenshot === undefined) {
         logger.warn("something went wrong during screenshot");
+        // try to send the tweet url to group when screenshot fails
+        for (const userConfig of registeredUserConfigs) {
+          await bot
+            .sendMessage(
+              userConfig.registeredBy,
+              ctx.i18n.text([locale], ["stream_screenshot_went_wrong"], [url])
+            )
+            .catch((err) => {
+              logger.warn(
+                `send tweet to group ${userConfig.registeredBy} failed, err is ${err}`
+              );
+            });
+        }
+
         return;
       }
 

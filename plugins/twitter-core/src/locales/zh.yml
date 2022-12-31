@@ -143,6 +143,7 @@ commands:
 
 translation: "翻译：{0}"
 stream_ondata_text_index: "序号：{0}"
+stream_screenshot_went_wrong: "截图时发生内部错误，推文链接为{0}"
 screenshot_went_wrong: "截图时发生未知错误，无法获取推文信息"
 translate_index_not_found: "提供的序号{0}对应的记录不存在"
 translate_url_name_not_found: "提供的推文连接错误，格式应为https://twitter.com/clearusui/status/1570944332039061505"
