@@ -19,6 +19,8 @@ export const setNotSensitive = (
   if (tweet.legacy.possibly_sensitive_editable)
     tweet.legacy.possibly_sensitive_editable = false;
 
+  tweet.is_translatable = false;
+
   if (
     tweet.legacy.extended_entities &&
     tweet.legacy.extended_entities.media &&
