@@ -56,6 +56,16 @@ export class GotoHandler extends TaskHandler {
       },
     });
 
+    await taskContext.page
+      .waitForFunction(() =>
+        Array.from(document.images).every((img) => img.complete)
+      )
+      .catch((err) => {
+        this.handleLogger.warn(
+          `wait for all images to load failed because of ${err}`
+        );
+      });
+
     this.handleLogger.debug("exited");
   }
 }
