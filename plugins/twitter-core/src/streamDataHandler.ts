@@ -78,7 +78,7 @@ export const registerStreamDataHandler = (
             )
             .catch((err) => {
               logger.warn(
-                `send tweet to group ${userConfig.registeredBy} failed, err is ${err}`
+                `send message to group ${userConfig.registeredBy} failed`
               );
             });
         }
@@ -114,7 +114,7 @@ export const registerStreamDataHandler = (
           .sendMessage(userConfig.registeredBy, currText)
           .catch((err) => {
             logger.warn(
-              `send tweet to group ${userConfig.registeredBy} failed, err is ${err}`
+              `send tweet to group ${userConfig.registeredBy} failed`
             );
           });
       }
