@@ -104,7 +104,7 @@ export class TranslateHandler extends TaskHandler {
 
         const translateFilePath = `./logs/translate/${tweetId}.json`;
 
-        writeFile(
+        await writeFile(
           translateFilePath,
           JSON.stringify(result.data, undefined, 2)
         ).catch(() =>
@@ -119,13 +119,14 @@ export class TranslateHandler extends TaskHandler {
 
         const failureFilePath = `./logs/failure/translate-${tweetId}.txt`;
 
+        this.preHandleLogger.warn(err);
         this.preHandleLogger.warn(
           `response data parsing failed, check file ${failureFilePath}`
         );
 
         await access("./logs/failure").catch(() => mkdir("./logs/failure"));
 
-        writeFile(
+        await writeFile(
           failureFilePath,
           JSON.stringify(result.data, undefined, 2) + `\n\n${err}`
         ).catch(() =>
@@ -151,15 +152,15 @@ export class TranslateHandler extends TaskHandler {
   async handle(taskContext: ITaskContext) {
     this.handleLogger.debug("entered");
 
-    if (taskContext.translateContext.customized.tag !== undefined) {
+    if (taskContext.translateContext.customized?.tag !== undefined) {
       this.handleLogger.debug("adding tag");
       await addTag(taskContext, this.handleLogger);
     }
-    if (taskContext.translateContext.customized.background !== undefined) {
+    if (taskContext.translateContext.customized?.background !== undefined) {
       this.handleLogger.debug("adding background");
       await addBackground(taskContext, this.handleLogger);
     }
-    if (taskContext.translateContext.customized.css !== undefined) {
+    if (taskContext.translateContext.customized?.css !== undefined) {
       this.handleLogger.debug("adding css");
       await addCSS(taskContext, this.handleLogger);
     }

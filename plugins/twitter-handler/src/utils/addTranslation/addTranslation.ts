@@ -54,7 +54,7 @@ export const addTranslation = (
   });
   const prevTextLength = tweet.legacy.full_text.length;
 
-  if (isMajorTweet && customized.tag !== undefined) {
+  if (isMajorTweet && customized?.tag !== undefined) {
     // the img html element is treated as plain text by the page
     // set span innerHTML to innerText to render the image properly
     tweet.legacy.full_text +=

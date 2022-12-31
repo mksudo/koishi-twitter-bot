@@ -74,13 +74,14 @@ export class ScreenshotHandler extends TaskHandler {
 
         const failureFilePath = `./logs/failure/screenshot-${tweetId}.txt`;
 
+        this.preHandleLogger.warn(err);
         this.preHandleLogger.warn(
           `response data parsing failed, check file ${failureFilePath}`
         );
 
         await access("./logs/failure").catch(() => mkdir("./logs/failure"));
 
-        writeFile(
+        await writeFile(
           failureFilePath,
           JSON.stringify(result.data, undefined, 2) + `\n\n${err}`
         ).catch(() =>
