@@ -157,8 +157,8 @@ export class ScreenshotHandler extends TaskHandler {
     const pageViewport = taskContext.page.viewport();
     if (clipArea.y + clipArea.height >= pageViewport.height) {
       await taskContext.page.setViewport({
-        width: pageViewport.width,
-        height: clipArea.y + clipArea.height + 256,
+        width: Math.round(pageViewport.width),
+        height: Math.round(clipArea.y + clipArea.height + 256),
       });
       await waitFor(1000);
     }
