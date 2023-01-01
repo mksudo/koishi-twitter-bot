@@ -13,9 +13,15 @@ export abstract class TaskHandler {
   protected readonly postHandleLogger: Logger;
 
   // whether the task handler has a nonempty preHandle function
-  protected readonly hasPreHandle: boolean;
+  protected readonly _hasPreHandle: boolean;
+  public get hasPreHandle() {
+    return this._hasPreHandle;
+  }
   // whether the task handler has a nonempty postHandle function
-  protected readonly hasPostHandle: boolean;
+  protected readonly _hasPostHandle: boolean;
+  public get hasPostHandle() {
+    return this._hasPostHandle;
+  }
 
   /**
    * Instantiate all loggers for the handler
@@ -51,20 +57,4 @@ export abstract class TaskHandler {
    * @param taskContext the shared context of tasks
    */
   async postHandle(taskContext: ITaskContext) {}
-
-  /**
-   * Get whether the current handler has nonempty preHandle function
-   * @returns whether the current handler has nonempty preHandle function
-   */
-  getHasPreHandle() {
-    return this.hasPreHandle;
-  }
-
-  /**
-   * Get whether the current handler has nonempty postHandle function
-   * @returns whether the current handler has nonempty postHandle function
-   */
-  getHasPostHandle() {
-    return this.hasPostHandle;
-  }
 }

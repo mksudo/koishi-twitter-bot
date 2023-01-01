@@ -53,7 +53,7 @@ export class TaskExecutor {
       async () => {
         // call preHandle functions for all tasks
         for (const task of tasks)
-          if (this.handlers[task].getHasPreHandle()) {
+          if (this.handlers[task].hasPreHandle) {
             await this.handlers[task].preHandle(taskContext).catch((err) => {
               logger.error(err);
               throw new Error(`failed at task ${task} step preHandle`);
@@ -72,7 +72,7 @@ export class TaskExecutor {
 
         // call postHandle functions for all tasks
         for (const task of tasks)
-          if (this.handlers[task].getHasPostHandle()) {
+          if (this.handlers[task].hasPostHandle) {
             await this.handlers[task].postHandle(taskContext).catch((err) => {
               logger.error(err);
               throw new Error(`failed at task ${task} step postHandle`);

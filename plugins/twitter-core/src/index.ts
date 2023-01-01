@@ -66,7 +66,7 @@ export function apply(ctx: Context, config: Config) {
 
       registerStreamDataHandler(ctx, logger, config, locale);
 
-      await ctx.twitterApi.getTwitterStream().connect();
+      await ctx.twitterApi.twitterStream.connect();
     }
 
     logger.debug("ready callback exited");

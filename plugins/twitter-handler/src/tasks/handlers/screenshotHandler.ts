@@ -14,7 +14,7 @@ import { TaskHandler } from "../handler";
  * and extracts tweet data from loading process
  */
 export class ScreenshotHandler extends TaskHandler {
-  protected hasPreHandle: boolean = true;
+  protected _hasPreHandle: boolean = true;
 
   /**
    * Register web page request interceptor, hijack the loading request

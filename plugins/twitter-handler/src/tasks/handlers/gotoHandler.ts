@@ -6,7 +6,7 @@ import { TaskHandler } from "../handler";
  * This class handles goto task, the web page will be loaded after handle
  */
 export class GotoHandler extends TaskHandler {
-  protected readonly hasPreHandle: boolean = true;
+  protected readonly _hasPreHandle: boolean = true;
 
   /**
    * Set web page interception and user agent for later tasks

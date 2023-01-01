@@ -32,16 +32,28 @@ if (process.env.DEBUG) logger.level = 3;
 class TwitterApi extends Service {
   static using = [twitterDatabaseName] as const;
 
-  protected twitterApi: TwitterApiProvider;
-  protected twitterStream: TweetStream<TweetV2SingleStreamResult>;
-  protected isDataHandlerRegistered: boolean;
+  protected _twitterApi: TwitterApiProvider;
+  public get twitterApi() {
+    return this._twitterApi;
+  }
+  protected _twitterStream: TweetStream<TweetV2SingleStreamResult>;
+  public get twitterStream() {
+    return this._twitterStream;
+  }
+  protected _isDataHandlerRegistered: boolean;
+  public get isDataHandlerRegistered() {
+    return this._isDataHandlerRegistered;
+  }
+  public set isDataHandlerRegistered(isDataHandlerRegistered: boolean) {
+    this.isDataHandlerRegistered = isDataHandlerRegistered;
+  }
 
   constructor(ctx: Context, config: TwitterApi.Config) {
     super(ctx, name);
 
     // initialize the twitter api
-    this.twitterApi = new TwitterApiProvider(config.bearerToken);
-    this.isDataHandlerRegistered = false;
+    this._twitterApi = new TwitterApiProvider(config.bearerToken);
+    this._isDataHandlerRegistered = false;
   }
 
   /**
@@ -62,8 +74,8 @@ class TwitterApi extends Service {
     logger.debug("service stopping");
 
     // close the stream if it is not already closed
-    this.twitterStream?.close();
-    this.twitterStream = undefined;
+    this._twitterStream?.close();
+    this._twitterStream = undefined;
 
     logger.debug("service stopped");
   }
@@ -72,17 +84,17 @@ class TwitterApi extends Service {
    * Create a stream
    */
   protected async makeStream() {
-    this.twitterStream = await this.twitterApi.v2.searchStream({
+    this._twitterStream = await this._twitterApi.v2.searchStream({
       "tweet.fields": ["entities", "in_reply_to_user_id", "referenced_tweets"],
       "user.fields": ["id", "username"],
       expansions: ["author_id"],
     });
 
-    this.twitterStream.autoReconnect = true;
-    this.twitterStream.autoReconnectRetries = Infinity;
+    this._twitterStream.autoReconnect = true;
+    this._twitterStream.autoReconnectRetries = Infinity;
 
     Object.keys(ETwitterStreamEvent).forEach((eventName) => {
-      this.twitterStream.on(eventName, (...payloads) => {
+      this._twitterStream.on(eventName, (...payloads) => {
         logger.debug(
           `stream event ${eventName}, payloads: ${JSON.stringify(payloads)}`
         );
@@ -127,19 +139,19 @@ class TwitterApi extends Service {
         `max rule amount: 25, current rule amount: ${rules.length}, cannot afford`
       );
 
-    const currentRules = await this.twitterApi.v2.streamRules();
+    const currentRules = await this._twitterApi.v2.streamRules();
 
     if (currentRules.data) {
-      await this.twitterApi.v2.updateStreamRules({
+      await this._twitterApi.v2.updateStreamRules({
         delete: {
           ids: currentRules.data.map((rule) => rule.id),
         },
       });
     }
 
-    await this.twitterApi.v2.updateStreamRules({ add: rules });
+    await this._twitterApi.v2.updateStreamRules({ add: rules });
 
-    if (this.twitterStream === undefined) {
+    if (this._twitterStream === undefined) {
       await this.makeStream();
     }
   }
@@ -153,33 +165,9 @@ class TwitterApi extends Service {
    * @returns the twitter user found, undefined if none exists
    */
   async selectUser(id?: string, name?: string) {
-    if (id) return await this.twitterApi.v2.user(id);
-    else if (name) return await this.twitterApi.v2.userByUsername(name);
+    if (id) return await this._twitterApi.v2.user(id);
+    else if (name) return await this._twitterApi.v2.userByUsername(name);
     else return undefined;
-  }
-
-  /**
-   * Get current active twitter stream
-   * @returns the active twitter stream
-   */
-  getTwitterStream() {
-    return this.twitterStream;
-  }
-
-  /**
-   * Get current established twitter api
-   * @returns the established twitter api
-   */
-  getTwitterApi() {
-    return this.twitterApi;
-  }
-
-  getIsDataHandlerRegistered() {
-    return this.isDataHandlerRegistered;
-  }
-
-  setIsDataHandlerRegistered(isDataHandlerRegistered: boolean) {
-    this.isDataHandlerRegistered = isDataHandlerRegistered;
   }
 }
 

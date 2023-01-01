@@ -23,7 +23,7 @@ import { TaskHandler } from "../handler";
  * This class handles the translate task, add translation to the tweets
  */
 export class TranslateHandler extends TaskHandler {
-  protected readonly hasPreHandle: boolean = true;
+  protected readonly _hasPreHandle: boolean = true;
 
   /**
    * Hijack the tweet loading process to add translation and extract data
