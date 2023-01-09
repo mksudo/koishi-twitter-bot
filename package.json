@@ -35,7 +35,7 @@
     "chai": "^4.3.7",
     "cross-env": "^7.0.3",
     "esbuild": "^0.14.54",
-    "esbuild-register": "^3.4.2",
+    "esbuild-register": "npm:@shigma/esbuild-register@^1.1.1",
     "mocha": "^10.2.0",
     "typescript": "^4.9.4",
     "yakumo": "^0.3.7",
@@ -49,14 +49,13 @@
     "yml-register": "^1.1.0"
   },
   "dependencies": {
-    "@koishijs/cli": "^4.10.10",
     "@koishijs/plugin-adapter-discord": "^3.4.0",
     "@koishijs/plugin-adapter-feishu": "^1.1.0",
     "@koishijs/plugin-adapter-kook": "^3.5.1",
     "@koishijs/plugin-adapter-onebot": "^5.5.3",
     "@koishijs/plugin-adapter-telegram": "^3.6.1",
     "@koishijs/plugin-admin": "^1.1.5",
-    "@koishijs/plugin-auth": "^2.5.0",
+    "@koishijs/plugin-analytics": "^1.0.0",
     "@koishijs/plugin-bind": "^1.3.2",
     "@koishijs/plugin-commands": "^2.3.0",
     "@koishijs/plugin-console": "^5.1.0",
@@ -69,9 +68,11 @@
     "@koishijs/plugin-market": "^1.8.0",
     "@koishijs/plugin-rate-limit": "^1.2.4",
     "@koishijs/plugin-sandbox": "^2.5.0",
-    "@koishijs/plugin-status": "^6.2.0",
+    "@koishijs/plugin-status": "^7.0.0",
     "koishi": "^4.11.1",
+    "koishi-plugin-assets-local": "^3.0.0",
+    "koishi-plugin-desktop": "^0.0.3",
     "koishi-plugin-gocqhttp": "^3.2.0",
-    "koishi-plugin-puppeteer": "^3.3.1"
+    "koishi-plugin-puppeteer": "^3.3.0"
   }
 }
