@@ -45,7 +45,7 @@ class TwitterApi extends Service {
     return this._isDataHandlerRegistered;
   }
   public set isDataHandlerRegistered(isDataHandlerRegistered: boolean) {
-    this.isDataHandlerRegistered = isDataHandlerRegistered;
+    this._isDataHandlerRegistered = isDataHandlerRegistered;
   }
 
   constructor(ctx: Context, config: TwitterApi.Config) {
