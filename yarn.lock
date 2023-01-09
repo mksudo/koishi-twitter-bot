@@ -62,16 +62,12 @@
     methods "^1.1.2"
     path-to-regexp "^6.1.0"
 
-"@koishijs/cli@^4.10.10":
-  version "4.10.10"
-  resolved "https://registry.yarnpkg.com/@koishijs/cli/-/cli-4.10.10.tgz#fa19eb696578944bc5c89f4606586c6a1dde06cf"
-  integrity sha512-85WFfrDjb0XZuCqgAJQPCuJgJFFzOW7RHdhCNtJbUWsrlA2aZjTWcBY6uHDQ7tItxTYhZhNTHtEOvD/q6IYXTw==
+"@koishijs/assets@^1.0.1":
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/@koishijs/assets/-/assets-1.0.1.tgz#fbd7ecd0c441c59c6ce0f0ff2228a8f90a5cd97e"
+  integrity sha512-rTg8W6LzjCBnMAwJ2CgU80hu/yWTw7QJipw+oHoBLrJbI3Ws5VzMGlu+XOOIYakgps7BtSZOYadCUnEWr9QLvw==
   dependencies:
-    "@koishijs/loader" "^2.4.3"
-    cac "^6.7.14"
-    chokidar "^3.5.3"
-    kleur "^4.1.5"
-    throttle-debounce "^3.0.1"
+    file-type "^16.5.4"
 
 "@koishijs/client@^5.1.0":
   version "5.1.0"
@@ -112,15 +108,6 @@
   version "1.2.6"
   resolved "https://registry.yarnpkg.com/@koishijs/helpers/-/helpers-1.2.6.tgz#2ab9a509e85781a1a6b05908b32c08332e37ebff"
   integrity sha512-MjX4NPlmqmYt5U8wrFNvRBAlekcP0J2AmYNdtI5mJgkUYNNp6z1WpZw7VpwnObGnceTwZON8FBDDekOKw8JinQ==
-
-"@koishijs/loader@^2.4.3":
-  version "2.4.3"
-  resolved "https://registry.yarnpkg.com/@koishijs/loader/-/loader-2.4.3.tgz#0c68063071aecbca24c2d5d83a604354c4f2bb52"
-  integrity sha512-vk/W8TK2/AgKuvEmP6C90+V4vn51u5A3zwJMRKaPi+Sm6xVMRCtGqvUkIi1xaX00hK9EhQKEi18UbRRLKGXhWA==
-  dependencies:
-    dotenv "^16.0.3"
-    js-yaml "^4.1.0"
-    ns-require "^1.1.4"
 
 "@koishijs/loader@^2.5.1":
   version "2.5.1"
@@ -173,10 +160,10 @@
   dependencies:
     "@koishijs/helpers" "^1.2.3"
 
-"@koishijs/plugin-auth@^2.5.0":
-  version "2.5.0"
-  resolved "https://registry.yarnpkg.com/@koishijs/plugin-auth/-/plugin-auth-2.5.0.tgz#7de108f97cdcf23ec76b4b97a1b0371b3008fafe"
-  integrity sha512-VVP642dsk4gdXB3SSm6iaat2PAlxEtWdbWgoBImInV8ixew1Gs8chdgyvL3RYgFJQ0NLtt63srsEOZiLe5icfg==
+"@koishijs/plugin-analytics@^1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@koishijs/plugin-analytics/-/plugin-analytics-1.0.0.tgz#096421c6d692aa787fb18c32f4a1cef420516581"
+  integrity sha512-KKBXO2BLb08yav7EXoS7GNqR9k43Mgt+/ynRnRgGXgTeNH1aYjkYeApJUKqZCqdUiTaOejR42xSHhxwvDYkIBw==
 
 "@koishijs/plugin-bind@^1.3.2":
   version "1.3.2"
@@ -275,10 +262,10 @@
   resolved "https://registry.yarnpkg.com/@koishijs/plugin-sandbox/-/plugin-sandbox-2.5.0.tgz#df6ee9a35e530a29bf101321864f3a568d691bfe"
   integrity sha512-9sRLvSmHP8s6mkegGOedQocSDwhtULeoWEUH+CMoLPltIPCy2zam7ZA/+1Te2hNcRqN2NbhS/rOWAO6XeQ1PTg==
 
-"@koishijs/plugin-status@^6.2.0":
-  version "6.2.0"
-  resolved "https://registry.yarnpkg.com/@koishijs/plugin-status/-/plugin-status-6.2.0.tgz#c325a124a940a20ce4b53804bac908a2721c704d"
-  integrity sha512-/f4D4Fp3ct2kINGIqM9MzpgJTHINvw/61mGsBA4ct723N/P8Dv5W+1/JcZ5hBx7rstUmD6NEmRSIOvNEHcLMPA==
+"@koishijs/plugin-status@^7.0.0":
+  version "7.0.0"
+  resolved "https://registry.yarnpkg.com/@koishijs/plugin-status/-/plugin-status-7.0.0.tgz#f3dab041c4e87cac37cdae1d2153fbc05352983f"
+  integrity sha512-rkf1fa1yiT+xD85o2/S8/ElU/SZa83fi07t1T9Qd8lbfDyKkjep2GWFEvS2X+qM3qb4Q5TzljWXvoE8F3rZVuA==
 
 "@koishijs/registry@^4.2.7":
   version "4.2.7"
@@ -1619,10 +1606,10 @@ esbuild-openbsd-64@0.15.18:
   resolved "https://registry.yarnpkg.com/esbuild-openbsd-64/-/esbuild-openbsd-64-0.15.18.tgz#79591a90aa3b03e4863f93beec0d2bab2853d0a8"
   integrity sha512-yK5NCcH31Uae076AyQAXeJzt/vxIo9+omZRKj1pauhk3ITuADzuOx5N2fdHrAKPxN+zH3w96uFKlY7yIn490xQ==
 
-esbuild-register@^3.4.2:
-  version "3.4.2"
-  resolved "https://registry.yarnpkg.com/esbuild-register/-/esbuild-register-3.4.2.tgz#1e39ee0a77e8f320a9790e68c64c3559620b9175"
-  integrity sha512-kG/XyTDyz6+YDuyfB9ZoSIOOmgyFCH+xPRtsCa8W85HLRV5Csp+o3jWVbOSHgSLfyLc5DmP+KFDNwty4mEjC+Q==
+"esbuild-register@npm:@shigma/esbuild-register@^1.1.1":
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/@shigma/esbuild-register/-/esbuild-register-1.1.1.tgz#3d50aca76e97dbfe6ffd7bbc4d4524a06c2cd197"
+  integrity sha512-BHnWxTaoaIKip0m5//A0h2k7UTAveDkSnvXSSrnYWCE9OljgLwkm6rjYo/WXgUrCSgZisSYcTraDS4t7V1bfzA==
   dependencies:
     debug "^4.3.4"
 
@@ -2347,6 +2334,19 @@ koa@^2.14.1:
     type-is "^1.6.16"
     vary "^1.1.2"
 
+koishi-plugin-assets-local@^3.0.0:
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/koishi-plugin-assets-local/-/koishi-plugin-assets-local-3.0.0.tgz#3c4e2e515b60bc2108fc393ee21c144303e2deef"
+  integrity sha512-R3hQY136zonkv5kokbju5SkDryNdD6DbMhADZ2P3guV2zgStXXOtJKkPWyUVPfMIwR3yTW5Mt+wKL6JvHpPrRw==
+  dependencies:
+    "@koishijs/assets" "^1.0.1"
+    file-type "^16.5.4"
+
+koishi-plugin-desktop@^0.0.3:
+  version "0.0.3"
+  resolved "https://registry.yarnpkg.com/koishi-plugin-desktop/-/koishi-plugin-desktop-0.0.3.tgz#2b989fcda1b270f5a6e999df6612830129672e14"
+  integrity sha512-SZlXPnBXgBE4Erm0D9JA0IRn5LFgXliz/Lp8P0Gy7FUiFAzXGexB4msWLH3tk4mp70GFibjvtV6ToTgMsLQ32Q==
+
 koishi-plugin-gocqhttp@^3.2.0:
   version "3.2.0"
   resolved "https://registry.yarnpkg.com/koishi-plugin-gocqhttp/-/koishi-plugin-gocqhttp-3.2.0.tgz#896c5fe644265fdc5ddf3569818a36f1af38ccad"
@@ -2356,7 +2356,7 @@ koishi-plugin-gocqhttp@^3.2.0:
     go-cqhttp "^1.1.6"
     strip-ansi "^6.0.1"
 
-koishi-plugin-puppeteer@^3.3.1:
+koishi-plugin-puppeteer@^3.3.0:
   version "3.3.1"
   resolved "https://registry.yarnpkg.com/koishi-plugin-puppeteer/-/koishi-plugin-puppeteer-3.3.1.tgz#69a61eed059f9670cc867cef2fb26f7e002ef23a"
   integrity sha512-efewlAPjLUJZZg1Oh8/6cZ2c4GVzMIbTgce2HMwSl/QE44KDyYCwSsne6pz+ETnOAbEeew6tnnS22N9dBUAgbg==
